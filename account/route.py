@@ -1,6 +1,6 @@
-import re  # <--- For phone validation
-from datetime import timedelta # <--- For Remember Me duration
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired # <--- For Tokens
+import re 
+from datetime import timedelta 
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message 
@@ -9,7 +9,7 @@ from models import db, Customer, mail, find_leader_by_address
 # 1. Define the Blueprint
 auth = Blueprint('auth', __name__)
 
-# 2. LOGIN ROUTE (Updated with Remember Me)
+# 2. LOGIN ROUTE
 @auth.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email')
@@ -23,13 +23,11 @@ def login():
         session['user_name'] = user.name
         session['user_role'] = user.role 
         
-        # --- REMEMBER ME LOGIC ---
         if remember:
             session.permanent = True
-            current_app.permanent_session_lifetime = timedelta(days=7) # Stays logged in for 7 days
+            current_app.permanent_session_lifetime = timedelta(days=7)
         else:
             session.permanent = False
-        # ------------------------------
 
         flash(f"Welcome back, {user.name}!", "login_success")
 
@@ -45,14 +43,12 @@ def login():
 
 @auth.route('/signup', methods=['POST'])
 def signup():
-    # 1. Capture basic data
     name = request.form.get('name')
     email = request.form.get('email')
     phone = request.form.get('phone') 
     password = request.form.get('password')
     confirm_password = request.form.get('confirm_password')
 
-    # 2. Capture Address data
     postal_code = request.form.get('postal_code')
     unit_number = request.form.get('unit_number')
     street_address = request.form.get('street_address')
@@ -98,7 +94,7 @@ def signup():
     # --- VALIDATION CHECKS END ---
 
 
-    # 4. Create New User (THIS MUST COME FIRST)
+    # 4. Create New User
     new_user = Customer(
         name=name,
         email=email,

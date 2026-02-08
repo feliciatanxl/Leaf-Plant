@@ -9,12 +9,9 @@ from dotenv import load_dotenv
 from sqlalchemy import event
 from firebase_admin import credentials, storage, initialize_app
 
-# This gets the folder that main.py is actually sitting in
 basedir = os.path.abspath(os.path.dirname(__file__))
-# This creates the full path: C:\Users\charb\...\serviceAccountKey.json
 cert_path = os.path.join(basedir, 'serviceAccountKey.json')
 
-# Now use that path to initialize
 cred = credentials.Certificate(cert_path)
 initialize_app(cred, {
     'storageBucket': 'wdp-ws-ai-2025.firebasestorage.app'
@@ -125,14 +122,9 @@ def create_app():
     
     @app.route('/myaccount')
     def myaccount():
-        # 1. Check if the user is logged in
         if 'user_id' not in session:
             return redirect(url_for('account')) 
-
-        # 2. Fetch the user data from the Customer table
         current_user = Customer.query.get(session['user_id'])
-
-        # 3. Pass the 'current_user' data to the HTML as 'user'
         return render_template('myaccount.html', user=current_user) 
 
     # ==============================================================================

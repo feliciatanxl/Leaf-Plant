@@ -16,10 +16,8 @@ def get_sg_time():
 # ==============================================================================
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
-    # Removed WAL mode. Using standard delete mode (standard .db file only)
     cursor.execute("PRAGMA journal_mode=DELETE")
     cursor.execute("PRAGMA synchronous=NORMAL")
-    # CRITICAL: This prevents "Database is Locked" errors by waiting up to 30s
     cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
 
@@ -134,7 +132,6 @@ class LoyaltyPoints(db.Model):
     transactions = db.relationship('LoyaltyTransaction', backref='account', lazy=True)
 
     def add_points(self, amount, description, ref_id=None):
-        # Handle existing NULL values in the database
         if self.current_points is None: self.current_points = 0
         if self.lifetime_points is None: self.lifetime_points = 0
 
@@ -142,7 +139,6 @@ class LoyaltyPoints(db.Model):
         self.lifetime_points += amount
         self.update_tier()
         
-        # Log History
         txn = LoyaltyTransaction(
             loyalty_id=self.id, 
             amount=amount, 
@@ -178,10 +174,10 @@ class LoyaltyPoints(db.Model):
 class LoyaltyTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     loyalty_id = db.Column(db.Integer, db.ForeignKey('loyalty_points.id'), nullable=False)
-    amount = db.Column(db.Integer, nullable=False) # Positive for earn, Negative for redeem
+    amount = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(255))
-    type = db.Column(db.String(20)) # 'earn' or 'redeem'
-    reference_id = db.Column(db.String(50), nullable=True) # Linked Order ID
+    type = db.Column(db.String(20))
+    reference_id = db.Column(db.String(50), nullable=True) 
     timestamp = db.Column(db.DateTime, default=get_sg_time)
     
 class Voucher(db.Model):

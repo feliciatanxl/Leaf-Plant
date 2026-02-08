@@ -441,3 +441,4 @@ __pycache__/
 #Firebase Folder
 serviceAccountKey.json
 
+.vscode
