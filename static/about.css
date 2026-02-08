@@ -1,0 +1,122 @@
+﻿/* --- VISION & MISSION SECTION STYLING (About.html) --- */
+
+.text-primary-blue {
+    color: #4CAF50; 
+}
+
+.about-hero h5 {
+    color: #28a745;
+}
+
+
+.vision-image-container {
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 1.5rem;
+}
+
+    .vision-image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 1rem;
+    }
+
+.vision-statement h3,
+.mission-statement h3 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.vision-statement p,
+.mission-statement p {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #6c757d !important;
+}
+
+@media (max-width: 992px) {
+    .vision-image-container {
+        margin-bottom: 3rem;
+    }
+}
+
+/* ----------------- WHY CHOOSE US BANNER (ABOUT.HTML) ----------------- */
+
+.why-choose-us-banner {
+    background-color: #1a4314;
+    color: white;
+    padding: 60px 0;
+    margin-top: 50px;
+    width: 100vw;
+    margin-left: 0;
+    transform: translateX(-50%);
+    left: 50%;
+    position: relative;
+}
+
+    .why-choose-us-banner h3 {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .why-choose-us-banner .lead-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        opacity: 0.85;
+        padding: 0 20px;
+    }
+
+
+.farm-stats-counter {
+    padding-top: 90px !important;
+    padding-bottom: 0 !important;
+    margin-top: -3rem;
+}
+
+.farm-stats-container {
+    color: white;
+    border-radius: 10px;
+    max-width: 1100px;
+    padding: 10px 0;
+}
+
+.stats-item {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+}
+
+.stat-description {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #E8F5E9;
+    text-transform: capitalize;
+}
+
+@media (min-width: 992px) {
+    .col-lg-3.stats-item:not(:first-child) {
+        border-left: 1px solid rgba(255, 255, 255, 0.4) !important;
+    }
+
+    .farm-stats-container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .stat-number {
+        font-size: 2.2rem;
+    }
+}
+
+/* ----------------- FIX FOR MOBILE BORDER LINE ----------------- */
+
+@media (max-width: 991.98px) {
+    .col-6.stats-item.border-start {
+        border-left: none !important;
+    }
+}

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Bag | Fresh Farm</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='orders.css') }}">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/"><img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo Png" height="70"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+            <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+            
+            <li class="nav-item">
+                {% if not session.get('user_id') %}
+                    <a class="nav-link" href="/account">Login</a>
+                {% elif session.get('user_role') == 'admin' %}
+                    <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                {% elif session.get('user_role') == 'leader' %}
+                    <a class="nav-link" href="/leader">Leader Panel</a>
+                {% else %}
+                    <a class="nav-link {% if request.path == '/account' %}active{% endif %}" href="/account">
+                        My Account
+                    </a>
+                {% endif %}
+            </li>
+
+            {% if session.get('user_id') and session.get('user_role') == 'user' %}
+            <li class="nav-item ms-lg-2">
+                <a class="nav-link active p-0" aria-current="page" href="/orders" id="orderLink" title="My Order">
+                    <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content container-xl mb-5" style="margin-top: 60px;">
+        <div class="row justify-content-center fade-in mb-4">
+            <div class="col-lg-8">
+                <a href="/product" class="back-link text-decoration-none fw-bold mb-3 d-inline-block">
+                    <i class="bi bi-arrow-left-circle me-2 text-success"></i> Continue Shopping
+                </a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="display-5 fw-bold text-dark mb-0">Your Bag</h1>
+                    <span id="header-count" class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">0 items</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 cart-wrapper">
+                <div id="cart-container"></div>
+
+                <div id="reward-management-section" style="display:none;" class="mt-4 fade-in">
+                    <div class="card p-4 border-0 shadow-sm rounded-4 mb-3">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-gift-fill text-success me-2"></i>Apply Rewards</h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 h-100 reward-choice-card" id="voucher-card">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Use a Voucher</label>
+                                    <select id="voucherSelect" class="form-select border-success-subtle shadow-none" onchange="toggleRewardSource('voucher')">
+                                        <option value="">-- Select Claimed Voucher --</option>
+                                        {% if user_vouchers %}
+                                        {% for v in user_vouchers %}
+                                            <option value="{{ v.id }}">${{ v.discount_amount|int }} OFF ({{ v.code }})</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>No vouchers in wallet</option>
+                                    {% endif %}
+                                    </select>
+                                    <small class="text-muted d-block mt-2">Vouchers claimed from your points.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 h-100 reward-choice-card" id="promo-card">
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Or Promo Code</label>
+                                    <div class="input-group">
+                                        <input type="text" id="promoInput" class="form-control border-success-subtle shadow-none" placeholder="Code" oninput="toggleRewardSource('promo')">
+                                        <button class="btn btn-success fw-bold" type="button" onclick="applyPromo()">Apply</button>
+                                    </div>
+                                    <div id="promoMessage" class="small mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Loyalty vouchers and promo codes cannot be used together.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cart-actions" style="display:none;" class="mt-4 fade-in">
+                    <div class="bg-light p-4 rounded-4 mb-4 shadow-sm border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0 text-muted">Subtotal</h5>
+                            <h5 class="mb-0 fw-bold" id="subtotal-display">$0.00</h5>
+                        </div>
+                        
+                        <div id="discount-row" class="d-flex justify-content-between align-items-center mb-2 text-danger d-none">
+                            <h5 class="mb-0">Discount (<span id="discount-percent">0</span>%)</h5>
+                            <h5 class="mb-0 fw-bold" id="discount-amount">-$0.00</h5>
+                        </div>
+
+                        <div id="voucher-row" class="d-flex justify-content-between align-items-center mb-2 text-primary d-none">
+                            <h5 class="mb-0">Voucher Applied</h5>
+                            <h5 class="mb-0 fw-bold" id="voucher-amount">-$0.00</h5>
+                        </div>
+                        
+                        <hr class="my-3">
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-0 fw-bold">Total</h2>
+                                <small class="text-muted">Inclusive of all farm taxes</small>
+                            </div>
+                            <h2 class="mb-0 fw-bold text-success" id="estimated-total">$0.00</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 order-md-2">
+                        <button id="checkout-button" onclick="startCheckout()" class="btn btn-success w-100 py-3 fw-bold shadow-sm rounded-pill" style="font-size: 1.1rem;">
+                            Proceed to Payment <i class="bi bi-arrow-right-short"></i>
+                        </button>
+                    </div>
+                        <div class="col-md-6 order-md-1">
+                            <a href="/product" class="btn-add-more">
+                                <i class="bi bi-plus-circle-dotted me-2"></i> Add more produce
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6598765432" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="AI Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright © 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+    let products_db_data = {}; 
+    const cartContainer = document.getElementById('cart-container');
+    const headerCount = document.getElementById('header-count');
+    const cartActions = document.getElementById('cart-actions');
+    const rewardSection = document.getElementById('reward-management-section');
+    
+    let cart = JSON.parse(localStorage.getItem('farmCart')) || [];
+    let appliedDiscountPercent = 0;
+    let appliedPromoCode = ""; 
+    let selectedVoucherId = null;
+
+    // --- 1. REWARD MANAGEMENT UI LOGIC ---
+    function toggleRewardSource(type) {
+        const voucherCard = document.getElementById('voucher-card');
+        const promoCard = document.getElementById('promo-card');
+        const promoInput = document.getElementById('promoInput');
+        const voucherSelect = document.getElementById('voucherSelect');
+
+        if (type === 'voucher' && voucherSelect.value !== "") {
+            // Selected a voucher: Disable and clear promo
+            promoInput.value = "";
+            promoInput.disabled = true;
+            appliedDiscountPercent = 0;
+            appliedPromoCode = "";
+            selectedVoucherId = voucherSelect.value;
+            
+            voucherCard.classList.add('reward-active');
+            promoCard.classList.remove('reward-active');
+            document.getElementById('promoMessage').innerText = "";
+        } else if (type === 'promo' && promoInput.value.trim() !== "") {
+            // Typing a promo: Reset voucher selection
+            voucherSelect.value = "";
+            selectedVoucherId = null;
+            
+            promoCard.classList.add('reward-active');
+            voucherCard.classList.remove('reward-active');
+        } else {
+            // Reset both if cleared
+            promoInput.disabled = false;
+            voucherCard.classList.remove('reward-active');
+            promoCard.classList.remove('reward-active');
+            selectedVoucherId = null;
+        }
+        renderCart();
+    }
+
+    function fetchLiveStock() {
+        fetch('/orders/api/get-stock')
+            .then(res => res.json())
+            .then(data => {
+                products_db_data = data; 
+                validateCartAgainstStock(); 
+                renderCart(); 
+            });
+    }
+
+    function validateCartAgainstStock() {
+        let hasChanges = false;
+        cart.forEach(item => {
+            const productInfo = products_db_data[item.id];
+            const maxStock = productInfo ? productInfo.stock : 0;
+            if (item.qty > maxStock) {
+                item.qty = maxStock;
+                hasChanges = true;
+            }
+        });
+        cart = cart.filter(item => item.qty > 0);
+        if (hasChanges) {
+            localStorage.setItem('farmCart', JSON.stringify(cart));
+            alert("⚠️ Your bag was updated based on current stock.");
+        }
+    }
+
+    function renderCart() {
+        cartContainer.innerHTML = '';
+        let subtotal = 0;
+        let itemCount = 0;
+
+        if (cart.length === 0) {
+            cartContainer.innerHTML = `<div class="text-center py-5 bg-white rounded-4 border shadow-sm"><h3>Bag is empty</h3></div>`;
+            headerCount.textContent = "0 items";
+            cartActions.style.display = 'none';
+            rewardSection.style.display = 'none';
+            return;
+        }
+
+        cartActions.style.display = 'block';
+        rewardSection.style.display = 'block';
+
+        cart.forEach((item, index) => {
+            const priceNum = parseFloat(item.price.replace('$', ''));
+            const itemTotal = priceNum * item.qty;
+            subtotal += itemTotal;
+            itemCount += parseInt(item.qty);
+            
+            const productInfo = products_db_data[item.id];
+            const maxStock = productInfo ? productInfo.stock : 0;
+            const imageFile = productInfo && productInfo.image ? productInfo.image : 'default_product.jpg';
+
+            const html = `
+                <div class="cart-card d-flex align-items-center bg-white p-3 mb-3 rounded-3 shadow-sm border">
+                    <div class="me-3" style="width: 80px; height: 80px; overflow: hidden; border-radius: 10px;">
+                        <img src="/static/image/${imageFile}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0 fw-bold">${item.name}</h5>
+                            <span class="fw-bold">$${itemTotal.toFixed(2)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="qty-control d-flex align-items-center bg-light rounded-pill px-1">
+                                <button class="btn btn-sm" onclick="updateQty(${index}, -1)"><i class="bi bi-dash"></i></button>
+                                <input type="text" class="form-control-plaintext text-center fw-bold" style="width: 35px;" value="${item.qty}" readonly>
+                                <button class="btn btn-sm" onclick="updateQty(${index}, 1)" ${item.qty >= maxStock ? 'disabled' : ''}><i class="bi bi-plus"></i></button>
+                            </div>
+                            <button class="btn btn-link text-danger p-0 small" onclick="removeItem(${index})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            cartContainer.innerHTML += html;
+        });
+
+        headerCount.textContent = `${itemCount} items`;
+        calculateFinalTotal(subtotal);
+    }
+
+    function calculateFinalTotal(subtotal) {
+        let discountVal = 0;
+        
+        // Handle Promo Discount
+        if (appliedDiscountPercent > 0) {
+            discountVal = subtotal * (appliedDiscountPercent / 100);
+            document.getElementById('discount-row').classList.remove('d-none');
+            document.getElementById('discount-percent').innerText = appliedDiscountPercent;
+            document.getElementById('discount-amount').innerText = `-$${discountVal.toFixed(2)}`;
+            document.getElementById('voucher-row').classList.add('d-none');
+        } else {
+            document.getElementById('discount-row').classList.add('d-none');
+        }
+
+        // Handle Voucher Discount (Exclusive to Promo)
+        const voucherSelect = document.getElementById('voucherSelect');
+        if (selectedVoucherId) {
+            const selectedOption = voucherSelect.options[voucherSelect.selectedIndex].text;
+            // Extract the "$X OFF" value from the text
+            const voucherMatch = selectedOption.match(/\$(\d+)/);
+            const voucherAmount = voucherMatch ? parseInt(voucherMatch[1]) : 0;
+            
+            discountVal = voucherAmount;
+            document.getElementById('voucher-row').classList.remove('d-none');
+            document.getElementById('voucher-amount').innerText = `-$${discountVal.toFixed(2)}`;
+            document.getElementById('discount-row').classList.add('d-none');
+        } else {
+            document.getElementById('voucher-row').classList.add('d-none');
+        }
+
+        const finalTotal = Math.max(0, subtotal - discountVal);
+        document.getElementById('subtotal-display').innerText = `$${subtotal.toFixed(2)}`;
+        document.getElementById('estimated-total').innerText = `$${finalTotal.toFixed(2)}`;
+    }
+
+    function applyPromo() {
+        const codeInput = document.getElementById('promoInput').value.trim();
+        if (!codeInput) return;
+
+        fetch('/orders/api/validate-promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: codeInput })
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(result => {
+            if (result.status === 200) {
+                appliedDiscountPercent = result.body.discount;
+                appliedPromoCode = codeInput;
+                selectedVoucherId = null; // Ensure voucher is cleared
+                document.getElementById('voucherSelect').value = "";
+                document.getElementById('promoMessage').className = "small mt-2 text-success fw-bold";
+                document.getElementById('promoMessage').innerText = `✅ Applied!`;
+                toggleRewardSource('promo');
+            } else {
+                alert(result.body.message);
+            }
+        });
+    }
+
+    window.updateQty = function (index, change) {
+        let currentItem = cart[index];
+        const maxStock = products_db_data[currentItem.id] ? products_db_data[currentItem.id].stock : 0;
+        if (change === 1 && currentItem.qty >= maxStock) return;
+        currentItem.qty += change;
+        if (currentItem.qty < 1) return;
+        localStorage.setItem('farmCart', JSON.stringify(cart));
+        renderCart();
+    };
+
+    window.removeItem = function (index) {
+        cart.splice(index, 1);
+        localStorage.setItem('farmCart', JSON.stringify(cart));
+        renderCart();
+    };
+    
+    document.addEventListener('DOMContentLoaded', fetchLiveStock);
+
+    const stripe = Stripe("{{ pub_key }}"); 
+
+    function startCheckout() {
+        const cartData = JSON.parse(localStorage.getItem('farmCart')) || [];
+        if (cartData.length === 0) return;
+
+        const btn = document.getElementById('checkout-button');
+        btn.disabled = true;
+        btn.innerHTML = 'Processing...';
+
+        fetch('/orders/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                cart: cartData,
+                promoCode: appliedPromoCode,
+                voucherId: selectedVoucherId // 👈 Send the Voucher ID!
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                btn.disabled = false;
+                btn.innerText = "Proceed to Payment";
+            } else {
+                return stripe.redirectToCheckout({ sessionId: data.id });
+            }
+        });
+    }
+</script>
+</body>
+</html>

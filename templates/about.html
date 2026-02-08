@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo Png" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link active" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link {% if request.path == '/account' %}active{% endif %}" href="/account">
+                            My Account
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2">
+                    <a class="nav-link {% if request.path == '/orders' %}active{% endif %} p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i>  
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content">
+        <section class="about-hero py-5 main-content-offset">
+            <div class="container">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6 order-lg-1 order-2">
+                        <h5 class="text-success fw-bold mb-2">About Leaf Plant</h5>
+                        <h3 class="display-5 fw-bold mb-4 text-dark">Cultivating Quality, Nurturing Community</h3>
+                        <p class="lead text-muted">
+                            For over a decade, Leaf Plant has been committed to sustainable farming and community well-being in Singapore. We specialize in producing high-quality, environmentally friendly crops through innovative practices that protect soil, conserve water, and support biodiversity.
+                        </p>
+                        <p class="text-muted">
+                            Our journey started with a simple mission: to bring the freshest, most affordable produce directly to our community. Today, we continue to push boundaries, delivering solutions that fuel healthy living and promote a sustainable future for local agriculture.
+                        </p>
+                        <p class="text-muted mb-0">
+                            At our core, we're a team of dedicated farmers, agronomists, and local food advocates united by a passion for ethical growing practices and creating a lasting, positive impact.
+                        </p>
+                    </div>
+                    <div class="col-lg-6 order-lg-2 order-1">
+                        <img src="{{ url_for('static', filename='image/4.jpg') }}" alt="Team members working" class="img-fluid rounded-3 shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="why-choose-us-banner">
+            <div class="counter-overlap-wrapper">
+                <div class="container">
+                    <div class="row text-center farm-stats-container mx-auto">
+                        <div class="col-6 col-lg-3 stats-item px-3 py-3">
+                            <div class="stat-number" data-count="20,000+">0</div>
+                            <div class="stat-description">Client satisfy</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="90%">0</div>
+                            <div class="stat-description">Farm Cultivate</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="500+">0</div>
+                            <div class="stat-description">Fast Delivery</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="24H">0</div>
+                            <div class="stat-description">Client satisfy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-5">
+            <div class="container my-5">
+                <div class="text-center mb-5">
+                    <p class="text-green small fw-bold text-uppercase mb-1">Our Vision and Mission</p>
+                    <h3 class="display-5 fw-bold">What makes us who we are</h3>
+                </div>
+                <div class="row align-items-center justify-content-center g-5">
+                    <div class="col-lg-5">
+                        <div class="vision-image-container shadow-lg">
+                            <img src="{{ url_for('static', filename='image/2.jpg') }}" alt="Hand holding lightbulb" class="img-fluid rounded-4">
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="vision-statement mb-5">
+                            <h3 class="text-primary-blue fw-bold">Vision Statement</h3>
+                            <p class="text-muted">
+                                To be the world's go-to tech powerhouse for transforming bold ideas into real-world solutions
+                                that empower people, spark innovation, and redefine what's possible.
+                            </p>
+                        </div>
+                        <div class="mission-statement">
+                            <h3 class="text-primary-blue fw-bold">Mission Statement</h3>
+                            <p class="text-muted">
+                                Leaf Plant is committed to providing wholesome, locally grown produce through sustainable agriculture and smart, eco-friendly systems.
+                                We strive to nourish our community and build a future of food security, driven by our dedication to innovation and positive environmental impact.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="AI Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright &copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateAccountLink() {
+            const accountLink = document.getElementById("accountLink");
+            if (accountLink) {
+                // Validation removed to allow direct viewing of Dashboards
+                const userRole = localStorage.getItem('userRole');
+
+                if (userRole === 'admin') {
+                    accountLink.textContent = 'Admin Panel';
+                    accountLink.href = '/admin/dashboard'; 
+                } else if (userRole === 'user') {
+                    accountLink.textContent = 'User Dashboard';
+                    accountLink.href = '/account'; 
+                } else {
+                    accountLink.textContent = 'Account';
+                    accountLink.href = '/account';
+                }
+            }
+        }
+
+        function startCounter(target) {
+            const endValue = parseInt(target.getAttribute('data-count').replace(/[^0-9]/g, ''));
+            const duration = 2000;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                let currentValue = Math.floor(progress * endValue);
+                let displayValue = currentValue.toLocaleString();
+                let suffix = target.getAttribute('data-count').replace(/[0-9,]/g, '').trim();
+                target.textContent = displayValue + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    target.textContent = target.getAttribute('data-count');
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAccountLink();
+            const counters = document.querySelectorAll('.stat-number');
+            const observerOptions = { threshold: 0.5 };
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        startCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            counters.forEach(counter => observer.observe(counter));
+
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            window.onscroll = function () {
+                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                    scrollTopBtn.style.display = "block";
+                } else {
+                    scrollTopBtn.style.display = "none";
+                }
+            };
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

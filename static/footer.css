@@ -1,0 +1,127 @@
+﻿/* Footer styling */
+
+.custom-footer {
+    background-color: #f4f4f4;
+    color: #000;
+    font-family: Arial, sans-serif;
+    padding: 30px 0 25px 0;
+    text-align: center;
+}
+
+
+
+/* Top section (logo, address, email, socials) */
+
+.footer-top {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto 10px auto;
+}
+
+
+
+/* Each section */
+
+.footer-section {
+    flex: 1;
+    min-width: 220px;
+}
+
+
+
+/* Logo */
+
+.footer-logo img {
+    width: 120px;
+}
+
+
+
+/* Titles */
+
+.footer-info h5 {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 5px;
+    margin-top: 15px;
+}
+
+
+
+/* Text */
+
+.footer-info p {
+    margin: 2px 0;
+    font-size: 15px;
+    color: #333;
+    line-height: 1.4;
+}
+
+
+
+.footer-socials {
+    margin-top: 15px
+}
+
+
+
+    /* Social links */
+
+    .footer-socials a {
+        color: #000;
+        font-size: 22px;
+        margin: 0 10px;
+        transition: color 0.2s ease;
+    }
+
+
+
+        .footer-socials a:hover {
+            color: #007bff;
+        }
+
+
+
+/* Divider line */
+
+.custom-footer hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 0 auto 20px auto;
+    width: 85%;
+}
+
+
+
+/* Copyright */
+
+.footer-copy {
+    color: #555;
+    font-size: 14px;
+    margin: 0;
+}
+
+
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+
+    .footer-top {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 25px;
+        margin-top: -30px;
+    }
+
+
+
+    .footer-logo img {
+        width: 100px;
+    }
+}

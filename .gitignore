@@ -416,3 +416,28 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ------------------------------------
+# Python and Flask Specific Exclusions
+# ------------------------------------
+
+# Python Virtual Environments (Crucial for collaboration)
+venv/
+.venv/
+env/
+
+# Standard Python compiled files and runtime directories
+*.pyc
+*.pyd
+__pycache__/
+
+# Database files (if you use SQLite, which Flask often does)
+*.sqlite
+*.db
+
+# Secret Folder
+.env
+
+#Firebase Folder
+serviceAccountKey.json
+

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | User Dashboard</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='myaccount.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo Png" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link active" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link active" aria-current="page" href="/account">
+                            My Account
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2">
+                    <a class="nav-link p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i>  
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content container-fluid page-content-wrapper">
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <div class="sidebar-menu card shadow-sm">
+                    <nav class="nav flex-column p-2">
+                        <a class="nav-link active" href="#" onclick="return showUserSection(event, 'my-profile')"><i class="bi bi-person-circle me-2"></i> My Profile</a>
+                        <a class="nav-link" href="#" onclick="return showUserSection(event, 'my-orders')"><i class="bi bi-basket me-2"></i> My Orders</a>
+                        <a class="nav-link" href="#" onclick="return showUserSection(event, 'my-rewards')">
+                        <i class="bi bi-flower1 me-2"></i> My Harvest
+                        </a>
+                        <a class="nav-link" href="#" onclick="return showUserSection(event, 'settings')"><i class="bi bi-gear me-2"></i> Settings</a>
+                        <hr class="my-2">
+                        <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-left me-2"></i> Log Out</a>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="card shadow-sm p-4">
+                    
+                    <div id="my-profile" class="user-section active">
+                        <h1 class="display-6 text-primary-green fw-bold mb-4">👋 Welcome, {{ user.name }}!</h1>
+                        <h4 class="mb-3">Personal Information</h4>
+
+                        <form action="{{ url_for('myaccount.update_profile') }}" method="POST" class="needs-validation">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <input type="text" name="name" class="form-control" id="fullName" 
+                                        value="{{ user.name }}" 
+                                        required minlength="10" maxlength="50"
+                                        title="Name must be between 10 and 50 characters.">
+                                    <div class="invalid-feedback">Name must be 10-50 characters long.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" name="email" class="form-control" id="email" 
+                                        value="{{ user.email }}" required>
+                                    <div class="form-text">Changing your email will update your login credentials.</div>
+                                    <div class="invalid-feedback">Please enter a valid email address containing '@'.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control" id="phone" 
+                                        value="{{ user.phone }}" 
+                                        placeholder="+65 9123 4567" 
+                                        required 
+                                        oninput="validateProfilePhone(this)">
+                                    <div class="invalid-feedback">
+                                        Please enter at least 8 digits (excluding country code).
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="postalCode" class="form-label">Postal Code</label>
+                                    <div class="input-group">
+                                        <input type="text" name="postal_code" class="form-control" id="postalCode" 
+                                            value="{{ user.postal_code if user.postal_code else '' }}" 
+                                            placeholder="123456" maxlength="6" pattern="\d{6}" required
+                                            oninput="handlePostalInput(this)" title="Must be exactly 6 numbers">
+                                        <span class="input-group-text d-none" id="postalSpinner">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        </span>
+                                    </div>
+                                    <div id="postalStatus" class="form-text text-muted" style="font-size: 0.8rem; min-height: 20px;"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="unitNumber" class="form-label">Unit Number</label>
+                                    <input type="text" name="unit_number" class="form-control" id="unitNumber" 
+                                        value="{{ user.unit_number if user.unit_number else '' }}" 
+                                        placeholder="#01-01" maxlength="7"
+                                        oninput="validateUnitInput(this)">
+                                </div>
+                                <div class="col-12">
+                                    <label for="streetAddress" class="form-label">Street Address</label>
+                                    <input type="text" name="street_address" class="form-control bg-light" id="streetAddress" 
+                                        value="{{ user.street_address if user.street_address else '' }}" 
+                                        placeholder="Auto-filled from Postal Code..." readonly required>
+                                </div>
+                                <div class="col-12 mt-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i> Save Changes</button>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash me-2"></i> Delete Account
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div> 
+                    <div id="my-orders" class="user-section">
+                        <h1 class="display-6 text-primary-green fw-bold mb-4">My Orders History</h1>
+                        {% if orders %}
+                        <div class="table-responsive">
+                            <table class="table align-middle table-striped table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order Ref</th>
+                                        <th>Date</th>
+                                        <th>Items</th>
+                                        <th>Total Paid</th>
+                                        <th>Status</th>
+                                        <th>Action</th> 
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td class="fw-bold text-success">#{{ order.display_id }}</td>
+                                        <td>{{ order.timestamp.strftime('%d %b %Y') }}</td>
+                                        <td>
+                                            <ul class="list-unstyled mb-0 small">
+                                            {% for item in order.order_items %}
+                                                <li>{{ item.quantity }}x {{ item.product_name }}</li>
+                                            {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td class="fw-bold">${{ "%.2f"|format(order.total_price) }}</td>
+                                        <td>
+                                            <span class="badge rounded-pill 
+                                                {% if 'Pending' in order.status %}bg-warning text-dark
+                                                {% elif 'Confirmed' in order.status %}bg-info text-dark
+                                                {% else %}bg-success{% endif %}">
+                                                {{ order.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" 
+                                            onclick="showOrderDetails('{{ order.display_id }}')">
+                                            Details
+                                        </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5 bg-light rounded-4">
+                            <i class="bi bi-basket fs-1 text-muted mb-3 d-block"></i>
+                            <p class="text-muted">You haven't placed any orders yet.</p>
+                            <a href="/product" class="btn btn-success rounded-pill px-4">Start Shopping</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="my-rewards" class="user-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h1 class="display-6 text-primary-green fw-bold mb-1">My Harvest Rewards</h1>
+                                <p class="text-muted mb-0">Grow your garden, earn points, and save on fresh produce.</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="bg-success text-white px-4 py-2 rounded-pill shadow-sm">
+                                    <i class="bi bi-stars me-2"></i>
+                                    <span class="fs-5 fw-bold">{{ user.points }} Points</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        <div class="bg-white rounded-circle p-3 shadow-sm d-inline-block mb-3 mb-md-0">
+                                            {% if user.loyalty and user.loyalty.tier == 'Harvest' %}
+                                                <i class="bi bi-tree-fill text-success fs-1"></i>
+                                            {% elif user.loyalty and user.loyalty.tier == 'Sprout' %}
+                                                <i class="bi bi-flower2 text-success fs-1"></i>
+                                            {% else %}
+                                                <i class="bi bi-seedling text-success fs-1"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <h4 class="fw-bold text-success mb-1">Current Status: {{ user.loyalty.tier if user.loyalty else 'Seedling' }} Tier</h4>
+                                        <p class="text-muted mb-3">
+                                            Earn <strong>1 Point</strong> for every $1 spent.
+                                            {% if not user.loyalty or user.loyalty.lifetime_points < 100 %}
+                                                Only <strong>{{ 100 - (user.loyalty.lifetime_points if user.loyalty else 0) }}</strong> more points to reach Sprout Tier!
+                                            {% elif user.loyalty.lifetime_points < 300 %}
+                                                Only <strong>{{ 300 - user.loyalty.lifetime_points }}</strong> more points to reach Harvest Tier!
+                                            {% else %}
+                                                🎉 Top Tier reached! Enjoy your 1.5x points multiplier.
+                                            {% endif %}
+                                        </p>
+                                        {% set lifetime = user.loyalty.lifetime_points if user.loyalty else 0 %}
+                                        {% set percent = (lifetime / 300 * 100) | int %}
+                                        <div class="progress" style="height: 10px; background-color: #d1e7dd;">
+                                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: {{ percent if percent <= 100 else 100 }}%;"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2 small text-muted fw-bold">
+                                            <span>🌱 Seedling</span>
+                                            <span>🌿 Sprout (100 pts)</span>
+                                            <span>🌳 Harvest (300 pts)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-7">
+                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-header bg-white border-0 pt-4 px-4">
+                                        <h5 class="fw-bold mb-0"><i class="bi bi-gift text-danger me-2"></i>Redeem Vouchers</h5>
+                                    </div>
+                                    <div class="card-body px-4 pb-4">
+                                        <div class="row g-3">
+                                            <div class="col-sm-4 text-center">
+                                                <div class="reward-redeem-card p-3 rounded-4 border {{ 'disabled-card' if user.points < 500 }}">
+                                                    <div class="fs-3 fw-bold text-success">$5</div>
+                                                    <div class="small text-muted mb-3">500 Pts</div>
+                                                    <button onclick="openRedeemModal('5_OFF', 500, 5)" class="btn btn-sm btn-success rounded-pill w-100" {{ 'disabled' if user.points < 500 }}>Claim</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 text-center">
+                                                <div class="reward-redeem-card p-3 rounded-4 border {{ 'disabled-card' if user.points < 1000 }}">
+                                                    <div class="fs-3 fw-bold text-success">$10</div>
+                                                    <div class="small text-muted mb-3">1000 Pts</div>
+                                                    <button onclick="openRedeemModal('10_OFF', 1000, 10)" class="btn btn-sm btn-success rounded-pill w-100" {{ 'disabled' if user.points < 1000 }}>Claim</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 text-center">
+                                                <div class="reward-redeem-card p-3 rounded-4 border {{ 'disabled-card' if user.points < 2000 }}">
+                                                    <div class="fs-3 fw-bold text-success">$20</div>
+                                                    <div class="small text-muted mb-3">2000 Pts</div>
+                                                    <button onclick="openRedeemModal('20_OFF', 2000, 20)" class="btn btn-sm btn-success rounded-pill w-100" {{ 'disabled' if user.points < 2000 }}>Claim</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="card border-0 shadow-sm rounded-4 h-100 bg-dark text-white overflow-hidden">
+                                    <div class="card-header bg-transparent border-0 pt-4 px-4">
+                                        <h5 class="fw-bold mb-0"><i class="bi bi-wallet2 text-warning me-2"></i>Voucher Wallet</h5>
+                                    </div>
+                                    <div class="card-body px-4 scroll-wallet" style="max-height: 250px; overflow-y: auto;">
+                                        {% if vouchers %}
+                                            {% for v in vouchers %}
+                                            <div class="active-voucher-card mb-3 p-3 d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold text-warning">${{ v.discount_amount | int }} Off</div>
+                                                    <code class="text-white-50 small">{{ v.code }}</code>
+                                                </div>
+                                                <i class="bi bi-qr-code fs-2 opacity-50"></i>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="text-center py-4 opacity-50">
+                                                <i class="bi bi-ticket-perforated fs-1 d-block mb-2"></i>
+                                                <p class="small">No active vouchers yet.</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 shadow-sm rounded-4">
+                                    <div class="card-header bg-white border-0 pt-4 px-4">
+                                        <h5 class="fw-bold"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Ways to Earn</h5>
+                                    </div>
+                                    <div class="card-body px-4">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 ps-0">
+                                                <div>
+                                                    <i class="bi bi-bag-check-fill text-success me-2 fs-5"></i>
+                                                    <strong>Buy Produce</strong>
+                                                    <small class="d-block text-muted">
+                                                        {% if user.loyalty and user.loyalty.tier == 'Harvest' %}
+                                                            1.5x Multiplier for Harvest Tier
+                                                        {% elif user.loyalty and user.loyalty.tier == 'Sprout' %}
+                                                            1.2x Multiplier for Sprout Tier
+                                                        {% else %}
+                                                            Earn points on every order
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <span class="badge bg-light text-dark">
+                                                    +{{ '1.5x' if user.loyalty and user.loyalty.tier == 'Harvest' else ('1.2x' if user.loyalty and user.loyalty.tier == 'Sprout' else '1x') }}
+                                                </span>
+                                            </li>
+
+                                            <li class="list-group-item py-3 border-0 ps-0">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <div>
+                                                        <i class="bi bi-people-fill text-info me-2 fs-5"></i>
+                                                        <strong>{{ leader_area_name }} Goal</strong>
+                                                    </div>
+                                                    {% if community_progress >= community_target %}
+                                                        <span class="badge bg-success text-white">TARGET HIT! 🎉</span>
+                                                    {% else %}
+                                                        <span class="badge bg-info text-dark">+50 pts Bonus</span>
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-info" role="progressbar" 
+                                                        style="width: {{ (community_progress / community_target * 100)|int }}%;">
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <small class="text-muted">{{ community_progress }} orders this week</small>
+                                                    <small class="text-muted fw-bold">Target: {{ community_target }}</small>
+                                                </div>
+                                                
+                                                {% if community_progress < community_target %}
+                                                    <small class="text-primary mt-1 d-block" style="font-size: 0.75rem;">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        Buy now to help your neighbors unlock the bonus!
+                                                    </small>
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-header bg-white border-0 pt-4 px-4">
+                                        <h5 class="fw-bold"><i class="bi bi-clock-history text-secondary me-2"></i>Points History</h5>
+                                    </div>
+                                    <div class="card-body px-4 scroll-wallet" style="max-height: 250px; overflow-y: auto;">
+                                        {% if user.loyalty and user.loyalty.transactions %}
+                                            <table class="table table-sm table-borderless align-middle">
+                                                <tbody>
+                                                    {% for txn in user.loyalty.transactions|reverse %}
+                                                    <tr>
+                                                        <td class="py-2">
+                                                            <small class="fw-bold d-block">{{ txn.description }}</small>
+                                                            <span class="text-muted" style="font-size: 0.75rem;">{{ txn.timestamp.strftime('%d %b') }}</span>
+                                                        </td>
+                                                        <td class="text-end py-2">
+                                                            {% if txn.amount > 0 %}
+                                                                <span class="text-success fw-bold">+{{ txn.amount }}</span>
+                                                            {% else %}
+                                                                <span class="text-danger fw-bold">{{ txn.amount }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% else %}
+                                            <div class="text-center py-4 text-muted">
+                                                <i class="bi bi-receipt-cutoff fs-1 mb-2 d-block opacity-25"></i>
+                                                <p class="small">No points history yet.</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                    <div id="settings" class="user-section">
+                        <h1 class="display-6 text-primary-green fw-bold mb-4">Account Settings</h1>
+                        <h5 class="mt-4 mb-3">Password Management</h5>
+                        
+                        <form id="passwordForm" action="{{ url_for('myaccount.change_password') }}" method="POST" class="needs-validation">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password" name="currentPassword" class="form-control" id="currentPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" name="newPassword" class="form-control" id="newPassword" required minlength="8">
+                                <div class="form-text">Must be at least 8 characters long.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" name="confirmPassword" class="form-control" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning"><i class="bi bi-lock me-2"></i> Change Password</button>
+                        </form>
+                    </div>
+
+                </div> </div> </div> </main>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">Delete Account?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete your account? <br>
+                    <strong>This action cannot be undone.</strong> All your order history will be lost.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('myaccount.delete_account') }}" method="POST">
+                        <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">Order Details #<span id="modal-order-id"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="position-relative m-4">
+                        <div class="progress" style="height: 2px;">
+                            <div id="status-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between position-absolute top-0 start-0 w-100 mt-n2">
+                            <div class="text-center step-item">
+                                <div class="step-circle bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 30px; height: 30px; font-size: 12px;">1</div>
+                                <small class="d-block mt-1 text-muted" style="font-size: 10px;">Confirmed</small>
+                            </div>
+                            <div class="text-center step-item">
+                                <div class="step-circle bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 30px; height: 30px; font-size: 12px;">2</div>
+                                <small class="d-block mt-1 text-muted" style="font-size: 10px;">Harvesting</small>
+                            </div>
+                            <div class="text-center step-item">
+                                <div class="step-circle bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 30px; height: 30px; font-size: 12px;">3</div>
+                                <small class="d-block mt-1 text-muted" style="font-size: 10px;">Packing</small>
+                            </div>
+                            <div class="text-center step-item">
+                                <div class="step-circle bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 30px; height: 30px; font-size: 12px;">4</div>
+                                <small class="d-block mt-1 text-muted" style="font-size: 10px;">Delivery</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-lg-6 mb-3">
+                            <h6 class="fw-bold text-muted mb-3">Items Ordered</h6>
+                            <ul id="modal-items-list" class="list-group list-group-flush small"></ul>
+                            <div class="d-flex justify-content-between mt-3 fw-bold border-top pt-2">
+                                <span>Total</span>
+                                <span class="text-success" id="modal-total-price"></span>
+                            </div>
+                            <p class="text-muted small mt-2"><i class="bi bi-clock me-1"></i> <span id="modal-date"></span></p>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6 class="fw-bold text-muted mb-3">Delivery Tracker</h6>
+                            <div id="deliveryMap" class="rounded-3 shadow-sm border" style="height: 250px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="redeemConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">Redeem Rewards</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-gift-fill fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Claim <span id="redeem-value-display"></span> Voucher?</h4>
+                    <p class="text-muted">
+                        This will deduct <strong><span id="redeem-points-display"></span> points</strong> from your account. 
+                        Once redeemed, vouchers cannot be refunded.
+                    </p>
+                </div>
+                <div class="modal-footer border-top-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" onclick="processRedemption()">Confirm Redeem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="redeemResultModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body text-center p-5">
+                    <div id="result-icon-container" class="mb-3">
+                        </div>
+                    <h3 class="fw-bold mb-2" id="result-title">Success!</h3>
+                    <p class="text-muted mb-4" id="result-message">Your voucher has been added to your wallet.</p>
+                    <button type="button" class="btn btn-success rounded-pill px-5" onclick="location.reload()">Awesome!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordErrorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-shield-lock-fill text-danger display-1 mb-3"></i>
+                    <h4 class="mb-2 fw-bold text-danger">Passwords Do Not Match</h4>
+                    <p class="text-muted">Please ensure your <strong>New Password</strong> and <strong>Confirm Password</strong> fields are identical.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="AI Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright &copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // --- 1. Tab Navigation Logic ---
+    function logoutUser(event) {
+        event.preventDefault();
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        alert('You have been logged out successfully.');
+        window.location.href = '/'; 
+    }
+
+    window.showUserSection = function (event, sectionId) {
+        event.preventDefault();
+        document.querySelectorAll('.user-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar-menu .nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if (window.history.pushState) {
+            window.history.pushState(null, null, '/account#' + sectionId);
+        }
+        return false;
+    }
+
+    // --- 2. Input Validation Logic ---
+    window.validateProfileForm = function (event) {
+        const form = document.getElementById('profileForm');
+        event.preventDefault();
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return false;
+        }
+        alert('✅ Profile updated successfully!');
+        form.classList.remove('was-validated');
+        return false;
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+        const userRole = localStorage.getItem('userRole');
+        const accountLink = document.getElementById('accountLink');
+        if(accountLink && userRole === 'admin') {
+            accountLink.textContent = 'Admin Panel';
+            accountLink.href = '/admin/dashboard';
+        }
+    });
+
+    function validatePhoneInput(input) {
+        let cleanVal = input.value.replace(/[^0-9+\s]/g, '');
+        if ((cleanVal.match(/\+/g) || []).length > 1 || (cleanVal.indexOf('+') > 0)) {
+            cleanVal = cleanVal.charAt(0) === '+' 
+                ? '+' + cleanVal.substring(1).replace(/\+/g, '') 
+                : cleanVal.replace(/\+/g, '');
+        }
+        input.value = cleanVal;
+    }
+
+    // 👇 NEW: OneMap API Function 👇
+    function handlePostalInput(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+        const postalCode = input.value;
+        const streetInput = document.getElementById('streetAddress');
+        const statusDiv = document.getElementById('postalStatus');
+        const spinner = document.getElementById('postalSpinner');
+
+        if (postalCode.length === 6) {
+            spinner.classList.remove('d-none');
+            statusDiv.textContent = "Searching OneMap...";
+            statusDiv.className = "form-text text-primary";
+            streetInput.placeholder = "Searching...";
+
+            fetch(`https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=N&getAddrDetails=Y&pageNum=1`)
+                .then(response => response.json())
+                .then(data => {
+                    spinner.classList.add('d-none');
+                    if (data.results && data.results.length > 0) {
+                        let result = data.results[0];
+                        let fullAddress = result.BLK_NO + " " + result.ROAD_NAME;
+                        if (result.BUILDING !== "NIL") fullAddress += ", " + result.BUILDING;
+
+                        streetInput.value = fullAddress;
+                        streetInput.classList.remove('is-invalid');
+                        streetInput.classList.add('is-valid');
+                        statusDiv.textContent = "✅ Address found!";
+                        statusDiv.className = "form-text text-success";
+                        document.getElementById('unitNumber').focus();
+                    } else {
+                        streetInput.value = "";
+                        streetInput.placeholder = "Address not found";
+                        statusDiv.textContent = "❌ Invalid Postal Code";
+                        statusDiv.className = "form-text text-danger";
+                    }
+                })
+                .catch(error => {
+                    spinner.classList.add('d-none');
+                    console.error("OneMap Error:", error);
+                    statusDiv.textContent = "⚠️ Error fetching address";
+                });
+        } else {
+            streetInput.value = "";
+            streetInput.placeholder = "Auto-filled from Postal Code...";
+            statusDiv.textContent = "";
+            streetInput.classList.remove('is-valid');
+            spinner.classList.add('d-none');
+        }
+    }
+
+    function validateUnitInput(input) {
+        let val = input.value;
+        let hashCount = (val.match(/#/g) || []).length;
+        if (hashCount > 1) {
+            let firstHashIndex = val.indexOf('#');
+            input.value = val.substring(0, firstHashIndex + 1) + val.substring(firstHashIndex + 1).replace(/#/g, '');
+        }
+    }
+
+    function validateProfilePhone(input) {
+        const val = input.value.trim();
+        const digitsOnly = val.replace(/\D/g, ''); 
+        if (/[^0-9+\s]/.test(input.value) || (input.value.match(/\+/g) || []).length > 1) {
+             input.value = input.value.replace(/[^0-9+\s]/g, '').replace(/(\+.*?)\+/g, '$1');
+        }
+        const minLength = val.startsWith('+') ? 10 : 8;
+        if (digitsOnly.length < minLength) {
+            input.setCustomValidity(`Please enter valid phone number (min ${minLength} digits).`);
+            input.classList.add('is-invalid');
+        } else {
+            input.setCustomValidity(''); 
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        }
+    }
+
+    // --- 3. Order Details & Map Logic (Shopee-Style Moving Truck) ---
+    let map = null;
+    let truckMarker = null;
+    let animationFrameId = null;
+
+    function showOrderDetails(orderId) {
+        console.log("Fetching details for Order ID:", orderId);
+
+        fetch('/myaccount/api/order-details/' + orderId)
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) { alert("API Error: " + data.error); return; }
+
+            // Populate Text Data
+            document.getElementById('modal-order-id').innerText = data.id;
+            document.getElementById('modal-date').innerText = data.date;
+            document.getElementById('modal-total-price').innerText = '$' + data.total.toFixed(2);
+            
+            const itemsList = document.getElementById('modal-items-list');
+            itemsList.innerHTML = '';
+            data.items.forEach(item => {
+                itemsList.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>${item.qty}x ${item.name}</span>
+                        <span>$${item.price.toFixed(2)}</span>
+                    </li>`;
+            });
+
+            // Update Status Bar
+            const step = data.current_step; 
+            const percentage = Math.min((step - 1) * 33, 100); 
+            document.getElementById('status-bar').style.width = percentage + '%';
+            
+            document.querySelectorAll('.step-circle').forEach((circle, index) => {
+                circle.className = 'step-circle rounded-circle d-flex align-items-center justify-content-center mx-auto';
+                circle.style.width = '30px'; circle.style.height = '30px'; circle.style.fontSize = '12px';
+                if (index + 1 < step) {
+                    circle.classList.add('bg-success', 'text-white');
+                    circle.innerHTML = '<i class="bi bi-check"></i>';
+                } else if (index + 1 === step) {
+                    circle.classList.add('bg-success', 'text-white');
+                    circle.innerText = index + 1;
+                } else {
+                    circle.classList.add('bg-secondary', 'text-white');
+                    circle.innerText = index + 1;
+                }
+            });
+
+            // Show Modal
+            const modalEl = document.getElementById('orderDetailsModal');
+            new bootstrap.Modal(modalEl).show();
+
+            // Initialize Map with OSRM (Shopee-style) logic
+            modalEl.addEventListener('shown.bs.modal', function () {
+                if (map) { map.remove(); map = null; }
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                
+                // Create Map
+                map = L.map('deliveryMap').setView(data.farm_coords, 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                // Add Icons
+                const farmIcon = L.divIcon({html: '<i class="bi bi-shop text-success fs-3"></i>', className: 'bg-transparent', iconSize: [30,30], iconAnchor: [15,15]});
+                const userIcon = L.divIcon({html: '<i class="bi bi-geo-alt-fill text-danger fs-3"></i>', className: 'bg-transparent', iconSize: [30,30], iconAnchor: [15,30]});
+
+                L.marker(data.farm_coords, {icon: farmIcon}).addTo(map).bindPopup("Farm").openPopup();
+                L.marker(data.user_coords, {icon: userIcon}).addTo(map).bindPopup("You");
+
+                // --- 🚀 REAL ROAD ROUTE LOGIC (OSRM) ---
+                const start = data.farm_coords; // [lat, lng]
+                const end = data.user_coords;   // [lat, lng]
+                
+                // OSRM requires "lng,lat" string format
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+
+                fetch(osrmUrl)
+                .then(res => res.json())
+                .then(routeData => {
+                    if (routeData.routes && routeData.routes.length > 0) {
+                        const coordinates = routeData.routes[0].geometry.coordinates; // [[lng,lat], [lng,lat]...]
+                        
+                        // Convert to Leaflet [lat, lng] format
+                        const latLngs = coordinates.map(coord => [coord[1], coord[0]]);
+                        
+                        // Draw Blue Road Line
+                        L.polyline(latLngs, {color: 'blue', weight: 5, opacity: 0.7}).addTo(map);
+                        map.fitBounds(L.polyline(latLngs).getBounds(), {padding: [50,50]});
+
+                        // Animate Truck along the road if "Out for Delivery"
+                        if (data.status === 'Out for Delivery') {
+                            animateTruckOnPath(latLngs);
+                        }
+                    } else {
+                        // Fallback straight line if road not found
+                        L.polyline([start, end], {color: 'red', dashArray: '5, 10'}).addTo(map);
+                    }
+                })
+                .catch(err => {
+                    console.log("OSRM Error, falling back to straight line", err);
+                    L.polyline([start, end], {color: 'red', dashArray: '5, 10'}).addTo(map);
+                });
+
+            }, { once: true }); 
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to load details. " + err.message);
+        });
+    }
+
+    // --- 🚀 NEW VOUCHER MODAL LOGIC STARTS HERE ---
+    let pendingVoucherType = null;
+
+    function openRedeemModal(voucherType, points, value) {
+        pendingVoucherType = voucherType;
+        
+        // Update Modal Text
+        document.getElementById('redeem-points-display').innerText = points;
+        document.getElementById('redeem-value-display').innerText = '$' + value;
+        
+        // Show Confirmation Modal
+        const confirmModal = new bootstrap.Modal(document.getElementById('redeemConfirmModal'));
+        confirmModal.show();
+    }
+
+    function processRedemption() {
+        // Hide Confirm Modal
+        const confirmModalEl = document.getElementById('redeemConfirmModal');
+        const confirmModal = bootstrap.Modal.getInstance(confirmModalEl);
+        confirmModal.hide();
+
+        // Call API
+        fetch('/claim-voucher', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: pendingVoucherType })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Setup Result Modal
+            const resultIconContainer = document.getElementById('result-icon-container');
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+
+            if (data.success) {
+                // Success State
+                resultIconContainer.innerHTML = '<div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="bi bi-check-lg fs-1"></i></div>';
+                resultTitle.innerText = "Yay! Voucher Claimed";
+                resultTitle.classList.remove('text-danger');
+                resultTitle.classList.add('text-success');
+                resultMessage.innerText = "Your voucher has been successfully added to your wallet.";
+            } else {
+                // Error State
+                resultIconContainer.innerHTML = '<div class="bg-danger-subtle text-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="bi bi-x-lg fs-1"></i></div>';
+                resultTitle.innerText = "Oops!";
+                resultTitle.classList.remove('text-success');
+                resultTitle.classList.add('text-danger');
+                resultMessage.innerText = data.message || "Something went wrong. Please try again.";
+            }
+
+            // Show Result Modal
+            const resultModal = new bootstrap.Modal(document.getElementById('redeemResultModal'));
+            resultModal.show();
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network error occurred.");
+        });
+    }
+    // --- 🚀 END NEW VOUCHER LOGIC ---
+
+    // Function to move truck along the road path points
+    function animateTruckOnPath(pathCoordinates) {
+        // Truck Icon
+        const truckIcon = L.divIcon({
+            html: '<div style="background:white; border-radius:50%; width:35px; height:35px; display:flex; justify-content:center; align-items:center; border:2px solid #0d6efd; box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="bi bi-truck text-primary fs-5"></i></div>',
+            className: 'bg-transparent',
+            iconSize: [35, 35],
+            iconAnchor: [17, 17]
+        });
+        
+        truckMarker = L.marker(pathCoordinates[0], {icon: truckIcon, zIndexOffset: 1000}).addTo(map);
+
+        let index = 0;
+        let lastTime = 0;
+        const speed = 50; // Milliseconds per point (Lower = Faster truck)
+
+        function move(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+
+            if (deltaTime > speed) {
+                if (index < pathCoordinates.length) {
+                    truckMarker.setLatLng(pathCoordinates[index]);
+                    index++;
+                    lastTime = timestamp;
+                } else {
+                    index = 0; // Loop animation for demo effect
+                }
+            }
+            animationFrameId = requestAnimationFrame(move);
+        }
+        animationFrameId = requestAnimationFrame(move);
+    }
+
+    // --- 4. Cleanup ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                if (!document.querySelector('.modal.show')) {
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = ''; 
+                    document.body.style.paddingRight = '';
+                }
+            });
+        });
+
+        // 👇 NEW: Password Mismatch Listener 👇
+        const passwordForm = document.getElementById('passwordForm');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(event) {
+                const newPass = document.getElementById('newPassword').value;
+                const confirmPass = document.getElementById('confirmPassword').value;
+
+                if (newPass !== confirmPass) {
+                    event.preventDefault(); // Stop the form from submitting
+                    const errorModal = new bootstrap.Modal(document.getElementById('passwordErrorModal'));
+                    errorModal.show();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+/* --- payment.css --- */
+body {
+    background-color: #f0f2f5; /* Slightly darker bg for contrast with white panels */
+}
+
+/* Form Inputs - Sculpted Look */
+.modern-input {
+    border: 1px solid #dce0e4;
+    padding: 12px 15px;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    font-weight: 500;
+    color: #2d3748;
+    transition: all 0.2s ease;
+}
+.modern-input:focus {
+    background-color: #fff;
+    border-color: #008037;
+    box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.1);
+    outline: none;
+}
+.modern-input.is-invalid { border-color: #dc3545; background-image: none; }
+.modern-input.is-valid { border-color: #198754; background-image: none; }
+
+/* Panels */
+.form-section, .summary-panel {
+    border-color: rgba(0,0,0,0.05) !important;
+}
+
+/* Sticky Summary Fix for overflow */
+.summary-panel {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+/* Hide scrollbar for cleaner look */
+.summary-panel::-webkit-scrollbar, #mini-cart-items::-webkit-scrollbar {
+  width: 6px;
+}
+.summary-panel::-webkit-scrollbar-thumb, #mini-cart-items::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.1); border-radius: 10px;
+}
+
+/* Payment Button Hover */
+.btn-pay {
+     transition: all 0.3s ease;
+}
+.btn-pay:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.3) !important;
+}
+
+/* Shake Animation for errors */
+@keyframes shake {
+    0% { transform: translateX(0); } 25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); }
+}

@@ -1,0 +1,73 @@
+﻿/* ----------------- Article.html Styles ----------------- */
+
+.article-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .article-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+
+.article-img {
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-title a {
+    color: #212529;
+    transition: color 0.3s;
+}
+
+    .card-title a:hover {
+        color: #4CAF50;
+    }
+
+.card-footer {
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+}
+
+.pagination .page-link {
+    color: #4CAF50;
+}
+
+    .pagination .page-link:hover {
+        background-color: #e8f5e9;
+    }
+
+.article-list-page.main-content-offset {
+    padding-top: 70px;
+}
+
+
+@media (max-width: 768px) {
+
+    .article-list-page.main-content-offset {
+        padding-top: 60px;
+    }
+
+    .article-grid .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .article-grid .row {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .article-grid .col-lg-4, .article-grid .col-md-6 {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+}

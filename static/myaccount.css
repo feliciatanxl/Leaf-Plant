@@ -1,0 +1,101 @@
+﻿/* Essential styles for the layout and content switching (Moved to inline for completeness) */
+:root {
+    --primary-green: #333333;
+    --light-green: #e9ecef;
+    --dark-text: #333333;
+}
+.page-content-wrapper {
+    padding-top: 100px;
+    padding-bottom: 50px;
+    min-height: calc(100vh - 100px);
+}
+
+.user-section {
+    display: none;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 0.375rem;
+}
+
+    .user-section.active {
+        display: block;
+    }
+
+.sidebar-menu .nav-link {
+    padding: 10px 15px;
+    border-radius: 0.25rem;
+    color: var(--dark-text); 
+    transition: all 0.2s;
+}
+
+/*    .sidebar-menu .nav-link.active,*/
+    .sidebar-menu .nav-link:hover {
+        background-color: var(--light-green);
+        color: var(--dark-text);
+        font-weight: 600;
+    }
+
+    .sidebar-menu .nav-link.active {
+        background-color: #e9ecef;
+        color: #198754;
+        border-left: 4px solid #198754;
+        padding-left: 12px;
+    }
+
+.text-primary-green {
+    color: var(--primary-green) !important;
+}
+
+
+.status-delivered {
+    color: #ffffff;
+    background-color: var(--primary-green);
+    padding: 4px 8px;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+}
+
+.status-pending {
+    color: #fff;
+    background-color: #ffc107;
+    padding: 4px 8px;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+}
+
+.status-shipped {
+    color: #fff;
+    background-color: #0d6efd; 
+    padding: 4px 8px;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+}
+
+.reward-redeem-card {
+            transition: all 0.3s ease;
+            background: white;
+            cursor: pointer;
+        }
+        .reward-redeem-card:hover:not(.disabled-card) {
+            transform: translateY(-5px);
+            border-color: #198754 !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .disabled-card {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+        .active-voucher-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 215, 0, 0.5);
+            border-radius: 12px;
+            position: relative;
+        }
+        .scroll-wallet::-webkit-scrollbar {
+            width: 5px;
+        }
+        .scroll-wallet::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews - Leaf Plant</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    
+    <style>
+        .review-header { font-weight: 900; letter-spacing: -1px; color: #2c3e50; }
+        .star-bar-bg { background-color: #f1f1f1; height: 8px; border-radius: 4px; overflow: hidden; }
+        .star-bar-fill { background-color: #198754; height: 100%; border-radius: 4px; } /* Leaf Plant Green */
+        .verified-badge { color: #198754; font-size: 0.85rem; font-weight: 600; }
+        .review-card { border-bottom: 1px solid #eee; padding-bottom: 30px; margin-bottom: 30px; }
+        .review-card:last-child { border-bottom: none; }
+        body { padding-top: 80px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Happy Farm Logo" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                    <li class="nav-item">
+                        {% if not session.get('user_id') %}
+                            <a class="nav-link" href="/account">Login</a>
+                        {% elif session.get('user_role') == 'admin' %}
+                            <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                        {% elif session.get('user_role') == 'leader' %}
+                            <a class="nav-link" href="/leader">Leader Panel</a>
+                        {% else %}
+                            <a class="nav-link" href="/account">My Account</a>
+                        {% endif %}
+                    </li>
+
+                    {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                    <li class="nav-item ms-lg-2">
+                        <a class="nav-link p-0" href="/orders" id="orderLink" title="My Order">
+                            <i class="bi bi-cart3 fs-5" style="vertical-align: middle; position: relative; top: -1px;"></i> 
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 mb-5">
+        
+        <!-- <h1 class="review-header mb-5">CUSTOMER REVIEWS</h1> -->
+
+        <div class="row">
+            <div class="col-lg-4 mb-5">
+                <div class="p-4 bg-light rounded-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <h1 class="display-4 fw-bold mb-0 me-3">{{ average_rating }}</h1>
+                        <div class="text-warning fs-5">
+                            {% for i in range(1, 6) %}
+                                {% if i <= average_rating|round|int %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-star text-muted opacity-25"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-4">Based on {{ total_reviews }} reviews</p>
+
+                    {% for star in [5, 4, 3, 2, 1] %}
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="small fw-bold me-2" style="width: 10px;">{{ star }}</span>
+                        <i class="bi bi-star-fill text-warning x-small me-2" style="font-size: 10px;"></i>
+                        <div class="flex-grow-1 star-bar-bg">
+                            {% set pct = (star_counts[star] / total_reviews * 100) if total_reviews > 0 else 0 %}
+                            <div class="star-bar-fill" style="width: {{ pct }}%;"></div>
+                        </div>
+                        <span class="small text-muted ms-2" style="width: 30px; text-align: right;">{{ star_counts[star] }}</span>
+                    </div>
+                    {% endfor %}
+
+                    <div class="mt-4 pt-4 border-top border-secondary-subtle">
+                        <h4 class="fw-bold text-success">{{ recommend_pct }}%</h4>
+                        <p class="text-muted small mb-0">of customers would recommend our produce.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 ps-lg-5">
+                
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
+                    <h5 class="fw-bold m-0"></h5>
+                    
+                    <form method="GET" action="{{ url_for('product.global_reviews') }}" class="d-flex gap-2">
+                        <select name="product_id" class="form-select form-select-sm rounded-pill border-secondary" 
+                                style="min-width: 150px; cursor: pointer;" 
+                                onchange="this.form.submit()">
+                            <option value="all">All Products</option>
+                            {% for p in all_products %}
+                                <option value="{{ p.id }}" {% if current_filter == p.id|string %}selected{% endif %}>
+                                    {{ p.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <select name="sort" class="form-select form-select-sm rounded-pill border-secondary" 
+                                style="width: 140px; cursor: pointer;" 
+                                onchange="this.form.submit()">
+                            <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                        </select>
+                    </form>
+                </div>
+
+                {% for review in reviews %}
+                <div class="review-card fade-in">
+                    
+                    <div class="d-flex justify-content-between align-items-start">
+    
+                    <div class="d-flex flex-column">
+                        <h5 class="fw-bold mb-1 text-dark">
+                            {{ review.customer.name if review.customer else 'Happy Customer' }}
+                        </h5>
+
+                        <div class="text-success fw-bold small">
+                            <i class="bi bi-patch-check-fill me-1"></i>Verified Buyer
+                        </div>
+                    </div>
+
+                    <small class="text-muted">{{ review.timestamp.strftime('%d %b %Y') }}</small>
+
+                </div>
+
+                    <div class="mt-3">
+                        <div class="text-warning mb-2">
+                            {% for i in range(review.rating) %}
+                                <i class="bi bi-star-fill"></i>
+                            {% endfor %}
+                        </div>
+                        
+                        <h6 class="fw-bold text-secondary">
+                            Purchased: <span class="text-dark">{{ review.product.name }}</span>
+                        </h6>
+                        
+                        <p class="text-secondary mt-2">
+                            {{ review.comment }}
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-chat-square-quote text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h3 class="text-muted">No reviews yet!</h3>
+                        <p class="text-muted">Be the first to order and share your experience.</p>
+                        <a href="{{ url_for('product.list_products') }}" class="btn btn-success rounded-pill mt-2">Shop Now</a>
+                    </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </main>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with Us">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="Happy Farm Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright &copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const scrollTopBtn = document.getElementById("scrollTopBtn");
+        window.onscroll = () => {
+            if (scrollTopBtn) {
+                scrollTopBtn.style.display = (window.scrollY > 200) ? "block" : "none";
+            }
+        };
+        if (scrollTopBtn) {
+            scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
+    </script>
+</body> 
+</html>

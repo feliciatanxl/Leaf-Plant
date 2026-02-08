@@ -1,0 +1,349 @@
+﻿/* ----------------- Product.html Styles ----------------- */
+
+body {
+    font-family: Arial, sans-serif;
+    /* background-color: #f7f7f7; */
+    padding-top: 40px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Produce Grid */
+
+
+.produce-item {
+    margin-bottom: 30px;
+    transition: transform 0.2s;
+}
+
+    .produce-item:hover {
+        transform: translateY(-5px);
+    }
+
+   .produce-item img {
+    height: 200px;
+    width: 100%;
+    object-fit: cover;
+    display: block;    
+}
+
+    .produce-item .card-body {
+        text-align: center;
+    }
+
+    .produce-item h5 {
+        font-weight: 700;
+    }
+
+    .produce-item p {
+        font-weight: 500;
+        color: #28a745;
+        margin-bottom: 15px;
+    }
+
+.view-detail-btn {
+    background-color: #28a745;
+    width: 70%;
+    padding: 10px 0;
+    border-radius: 25px;
+    border: 1.5px solid #464646;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.2s ease;
+}
+
+.view-detail-btn:hover {
+    /*background-color: #218838;*/
+    background-color: #28a745 !important; 
+    color: #ffffff !important;            
+    border-color: #28a745 !important;
+    }
+
+/* Modal */
+.detail-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.produce-item img {
+    height: 200px;
+    object-fit: cover;
+}
+
+
+.detail-container.active {
+    display: flex;
+}
+
+.detail-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+    .detail-content h2 {
+        margin-bottom: 18px;
+        font-size: 28px;
+    }
+
+    .detail-content p {
+        color: black;
+        font-weight: 600;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+    
+
+    .detail-content .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .detail-content .qty-label,
+    .detail-content input[type="number"] {
+        width: 80px;
+        margin-bottom: 22px;
+    }
+.detail-description {
+    list-style: none; /* removes bullet */
+    padding: 0;
+    text-align: center;
+}
+
+
+
+.add-cart-btn {
+    width: 70%;
+    padding: 10px 0;
+    border-radius: 25px;
+    border: 1px solid #464646;
+    background: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.2s ease;
+    cursor: pointer;
+}
+
+
+    .add-cart-btn:hover {
+        background-color: #218838;
+    }
+
+
+.action-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quantity-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; 
+    width: 100%;
+    margin: 0 auto; 
+}
+
+.quantity-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e6e6e6;
+    background: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 20px; 
+    user-select: none;
+    transition: 0.2s ease;
+}
+
+    .quantity-btn:hover {
+        background: #ececec;
+    }
+
+.quantity-number {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.quantity-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+    .quantity-btn:hover {
+        background: #ececec;
+    }
+
+.quantity-number {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.quantity-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+
+
+
+
+
+
+footer {
+    background: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 50px;
+    /* box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1); */
+}
+
+
+
+
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #4a9c46;
+}
+
+/* Links */
+.nav-links {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+}
+
+    .nav-links a {
+        text-decoration: none;
+        color: #333;
+        font-weight: 500;
+    }
+
+        .nav-links a:hover {
+            color: #4a9c46;
+        }
+
+/* Search */
+.product-search-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    margin: 40px 0 20px;
+}
+
+/* Sidebar search box */
+.search-bar-section {
+    height: 80px;
+    position: sticky;
+    top: 70px; /* height of your main navbar */
+    z-index: 1020;
+}
+
+.search-box {
+    position: relative;
+}
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border: 1px solid #ccc;
+        border-radius: 25px;
+        background-color: #f5f5f5;
+        font-size: 15px;
+    }
+
+    .search-box i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        color: #555;
+    }
+
+/* Sidebar category list */
+.product-category-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+    .product-category-list li {
+        margin-bottom: 10px;
+    }
+
+    .product-category-list a {
+        text-decoration: none;
+        color: #222;
+        font-size: 15px;
+    }
+
+        .product-category-list a:hover {
+            text-decoration: underline;
+        }
+
+
+/* --- Notification Toast Styles --- */
+.toast-container {
+    /* Set higher than any other element in the project */
+    z-index: 9999 !important; 
+    transition: all 0.3s ease-in-out;
+    /* Adjusted margin so it floats nicely in the corner */
+    margin-top: 20px; 
+    position: fixed;
+}
+
+.toast {
+    /* frosted glass effect is great, but keep opacity high for readability */
+    backdrop-filter: blur(8px); 
+    min-width: 300px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Added shadow to pop out from the grey */
+}
+
+/* Use your high-opacity backgrounds to stay vibrant over the grey backdrop */
+.toast.bg-danger {
+    background-color: rgba(220, 53, 69, 0.98) !important; 
+}
+
+.toast.bg-success {
+    background-color: rgba(25, 135, 84, 0.98) !important; 
+}

@@ -1,0 +1,23 @@
+{% extends "index.html" %}
+{% block title %}Access Denied - Leaf Plant{% endblock %}
+
+{% block content %}
+<div class="container vh-100 d-flex align-items-center justify-content-center text-center mt-5">
+    <div class="card border-0 shadow-lg p-5 rounded-4" style="max-width: 500px;">
+        <i class="bi bi-shield-slash text-danger display-1 mb-4"></i>
+        
+        <h1 class="fw-bold text-dark">403</h1>
+        <h4 class="text-muted mb-4">Area Restricted!</h4>
+        
+        <p class="mb-4 text-secondary">
+            Sorry, you don't have the permissions required to view this page. This area is for authorized personnel only.
+        </p>
+
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('index') }}" class="btn btn-success btn-lg rounded-pill shadow-sm">
+                Return to Public Area
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

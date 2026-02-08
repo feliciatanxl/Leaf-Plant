@@ -1,0 +1,300 @@
+﻿﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.png') }}?v=3">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='contact.css') }}">
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo Png" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link {% if request.path == '/account' %}active{% endif %}" href="/account">
+                            My Account
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2">
+                    <a class="nav-link p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i> 
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content">
+        <section id="contact" class="py-5 bg-soft-blue">
+            <div class="container">
+                <h1 class="text-center mb-4 display-4 fw-bold">Connect with Leaf Plant</h1>
+                <p class="text-center mb-5 text-muted">We're here to answer your questions about wholesale, partnerships, or farm tours. <strong>We aim to respond within 24 hours.</strong></p>
+
+                <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                {# NEW FILTER: Only show messages related to the contact form #}
+                                {% if "Message" in message or "Contact" in message or "inquiry" in message %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+                <div class="row g-4 justify-content-center align-items-stretch">
+                    <div class="col-lg-6 d-flex">
+                        <form id="contactForm" method="POST" action="{{ url_for('contact.contact') }}" class="p-4 border rounded shadow-sm bg-white w-100 d-flex flex-column h-100" novalidate>
+                            {{ form.hidden_tag() }} 
+
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                {% if form.name.errors %}
+                                    {{ form.name(class="form-control is-invalid", placeholder="Your Name", maxlength="100") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %} {{ error }} {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.name(class="form-control", placeholder="Your Name", maxlength="100") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid", placeholder="name@example.com") }}
+                                    <div class="invalid-feedback d-block">{% for error in form.email.errors %} {{ error }} {% endfor %}</div>
+                                {% else %}
+                                    {{ form.email(class="form-control", placeholder="name@example.com") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number (Optional)</label>
+                                {% if form.phone.errors %}
+                                    {{ form.phone(class="form-control is-invalid", placeholder="+65 1234 5678", type="tel", oninput="this.value=this.value.replace(/[^0-9+ ]/g,'');") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.phone.errors %} {{ error }} {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.phone(class="form-control", placeholder="+65 1234 5678", type="tel", minlength="8", oninput="this.value=this.value.replace(/[^0-9+ ]/g,'');") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3 flex-grow-1 d-flex flex-column">
+                                <label class="form-label">Message</label>
+                                {% if form.message.errors %}
+                                    {{ form.message(class="form-control flex-grow-1 is-invalid", rows="4", style="min-height: 150px;") }}
+                                    <div class="invalid-feedback d-block">{% for error in form.message.errors %} {{ error }} {% endfor %}</div>
+                                {% else %}
+                                    {{ form.message(class="form-control flex-grow-1", rows="4", style="min-height: 150px;") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3 recaptcha-wrapper">
+                                <div class="g-recaptcha" data-sitekey="6LeHaScsAAAAAASqsawgrRXJ3lkFe-CsYeIqRY_F"></div>
+                                <div id="recaptchaError" class="text-danger small mt-1" style="display:none;">
+                                    <i class="bi bi-exclamation-circle-fill me-1"></i> Please complete the captcha verification.
+                                </div>
+                            </div>
+
+                            {{ form.submit(class="btn btn-custom w-100") }}
+                        </form>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="h-100 d-flex flex-column">
+                            <div id="map-placeholder" class="bg-light border rounded overflow-hidden shadow-sm flex-grow-1">
+                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127641.1716388434!2d103.7749520935547!3d1.352083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31da11238a8b9375%3A0x887869cf529f57a5!2sSingapore!5e0!3m2!1sen!2ssg!4v1700000000000!5m2!1sen!2ssg" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            </div>
+
+                            <div class="mt-4 p-4 border rounded shadow-sm bg-white flex-shrink-0">
+                                <h4 class="fw-bold mb-3">Or Reach Us Directly</h4>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-geo-alt-fill me-3 fs-5 text-success"></i>
+                                    <div>
+                                        <p class="mb-0 fw-bold">Address</p>
+                                        <p class="mb-0 text-muted">123 Main Street Singapore 123456</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-telephone-fill me-3 fs-5 text-success"></i>
+                                    <div>
+                                        <p class="mb-0 fw-bold">Phone</p>
+                                        <p class="mb-0 text-muted">+65 8026 2125</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-envelope-fill me-3 fs-5 text-success"></i>
+                                    <div>
+                                        <p class="mb-0 fw-bold">Email</p>
+                                        <p class="mb-0 text-muted">info@AI.com.sg</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal fade" id="thankYouModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-5">
+                    <i class="bi bi-check-circle-fill text-success mb-3" style="font-size: 4rem;"></i>
+                    <h2 class="fw-bold">Message Sent!</h2>
+                    <p class="text-muted">Thank you. We have received your inquiry and will aim to respond within 24 hours.</p>
+                    <button type="button" class="btn btn-success px-5 py-2 fw-bold" data-bs-dismiss="modal">Great!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="AI Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright © 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateAccountLink() {
+            const accountLink = document.getElementById("accountLink");
+            if (accountLink) {
+                const userRole = localStorage.getItem('userRole');
+
+                if (userRole === 'admin') {
+                    accountLink.textContent = 'Admin Panel';
+                    accountLink.href = '/admin/dashboard'; 
+                } else if (userRole === 'leader') {
+                    accountLink.textContent = 'Leader Hub';
+                    accountLink.href = '/leader'; 
+                } else if (userRole === 'user') {
+                    accountLink.textContent = 'User Dashboard';
+                    accountLink.href = '/myaccount'; 
+                } else {
+                    accountLink.textContent = 'Account';
+                    accountLink.href = '/account';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateAccountLink();
+            
+            const form = document.getElementById('contactForm');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    if (grecaptcha.getResponse() === "") {
+                        event.preventDefault(); 
+                        document.getElementById('recaptchaError').style.display = 'block'; 
+                    } else {
+                        document.getElementById('recaptchaError').style.display = 'none'; 
+                    }
+                });
+            }
+
+            window.addEventListener('DOMContentLoaded', function () {
+            const successAlerts = document.querySelectorAll('.alert-success');
+
+            successAlerts.forEach(alert => {
+                const messageText = alert.textContent.trim();
+                
+                // ONLY trigger the modal if it's the specific Contact Form message
+                if (messageText.includes("Message sent successfully")) {
+                    alert.style.display = 'none'; // Hide the green bar
+                    const thankYouModal = new bootstrap.Modal(document.getElementById('thankYouModal'));
+                    thankYouModal.show();
+                } 
+                // OPTIONAL: Automatically hide admin-related pings if they show up here by accident
+                else if (messageText.includes("updated") || messageText.includes("deleted")) {
+                    alert.style.display = 'none';
+                }
+            });
+        });
+
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            if (scrollTopBtn) {
+                window.addEventListener('scroll', function () {
+                    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                        scrollTopBtn.style.display = "block";
+                    } else {
+                        scrollTopBtn.style.display = "none";
+                    }
+                });
+                scrollTopBtn.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

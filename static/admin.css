@@ -1,0 +1,142 @@
+﻿/* General Styles */
+.text-primary-green {
+    color: #198754 !important;
+}
+
+.page-content-wrapper {
+    padding-top: 100px;
+    padding-bottom: 50px;
+}
+
+.user-section:not(.active) {
+    display: none;
+}
+
+.sidebar-menu .nav-link {
+    padding: 10px 15px;
+    border-radius: 0.25rem;
+    color: var(--dark-text);
+    transition: all 0.2s;
+}
+
+    /*    .sidebar-menu .nav-link.active,*/
+    .sidebar-menu .nav-link:hover {
+        background-color: var(--light-green);
+        color: var(--dark-text);
+        font-weight: 600;
+    }
+
+    .sidebar-menu .nav-link.active {
+        background-color: #e9ecef;
+        color: #198754;
+        border-left: 4px solid #198754;
+        padding-left: 12px;
+    }
+
+
+.placeholder-chart {
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
+
+/* Customer Service / Product Header Fixes */
+.inquiry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Align button to the bottom of the text block */
+    margin-bottom: 1.5rem;
+}
+
+    .inquiry-header h1 {
+        margin-bottom: 0.25rem !important; /* Adjust spacing below the title */
+    }
+
+.page-content-wrapper .card p.lead {
+    margin-bottom: 0;
+}
+
+/* Dashboard Specific Styles (From Screenshot) */
+.metric-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+}
+
+.metric-icon {
+    font-size: 2.5rem;
+    color: #198754; /* Green color for icons */
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.positive-trend {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.negative-trend {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.chart-placeholder-box {
+    background-color: #f8fdf9;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1.5rem;
+    min-height: 350px; /* Gives space for chart */
+}
+
+.chart-title {
+    color: #198754;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+/* Placeholder for Pie Chart */
+.pie-chart-placeholder {
+    height: 150px;
+    width: 150px;
+    margin: 1rem auto;
+    border: 8px solid #198754;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #198754;
+    background: conic-gradient(#198754 0% 64%, #e9ecef 64% 100%);
+}
+
+.table-warning {
+            transition: background-color 2s ease-out;
+        }
+
+.neighbor-card:hover {
+            transform: translateY(-3px);
+            transition: all 0.3s ease;
+            border-color: #198754 !important;
+        }
+.profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #198754, #28a745);
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }

@@ -1,0 +1,376 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Produce | Fresh Farm to Table</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='product.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo" height="70">
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center"> <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link {% if request.path == '/account' %}active{% endif %}" href="/account">
+                            My Account
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2"> <a class="nav-link {% if request.path == '/orders' %}active{% endif %} p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i> 
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container main-content-offset pt-5">
+        <div class="container-fluid mt-4 px-4">
+            <div class="row">
+                <div class="col-md-3 px-4 mb-5">
+                    
+                    <h6 class="fw-bold mb-3" style="letter-spacing: 1px;">SEARCH PRODUCTS:</h6>
+                    <div class="search-box mb-4">
+                       
+                        <form action="{{ url_for('product.list_products') }}" method="GET">
+    <input type="text" name="search" id="search" class="form-control rounded-pill" placeholder="Search products..." value="{{ search_val }}">
+    <input type="hidden" name="category" value="{{ active_category }}">
+</form>
+                
+                    </div>
+
+                   <h6 class="fw-bold mb-3" style="letter-spacing: 1px;">PRODUCT CATEGORIES</h6>
+<ul class="product-category-list list-unstyled">
+    <li class="mb-2">
+        <a href="{{ url_for('product.list_products') }}" 
+           class="text-decoration-none text-dark {{ 'fw-bold' if not active_category or active_category == 'all' }}">
+           All Produce
+        </a>
+    </li>
+
+     
+    {% for cat in categories %}
+    <li class="mb-2">
+        <a href="{{ url_for('product.list_products', category=cat.slug) }}" 
+           class="text-decoration-none text-dark {{ 'fw-bold' if active_category == cat.slug }}">
+            {{ cat.name }}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="row g-4" id="productGrid">
+                        {% for product in products %}
+                        <div class="col-md-4 produce-item" data-category="{{ product.category|lower }}">
+                            <div class="card h-100 shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+                                <div style="height: 200px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; overflow: hidden; position: relative; border-radius: 15px 15px 0 0;">
+    
+                                <div id="fallback-{{ product.id }}" class="d-flex flex-column align-items-center opacity-25">
+                                    <i class="bin bi-image text-muted" style="font-size: 4rem;"></i>
+                                    <small class="text-muted fw-bold">NO IMAGE</small>
+                                </div>
+
+                                <img id="publicImg{{ product.id }}"
+                                   src="{% if product.image_file and product.image_file.startswith('http') %}{{ product.image_file }}{% elif product.image_file %}{{ url_for('static', filename='image/' + product.image_file) }}{% else %}{% endif %}"
+                                    alt="{{ product.name }}"
+                                    style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none;"
+                                    onload="this.style.display='block'; document.getElementById('fallback-{{ product.id }}').style.display='none';"
+                                    onerror="this.style.display='none'; document.getElementById('fallback-{{ product.id }}').style.display='flex';">
+                            </div>
+                                <div class="card-body text-center">
+                                    <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+                                    <p class="text-success fw-bold mb-1">${{ "%.2f"|format(product.price) }}</p>
+
+                                    <button class="view-detail-btn w-100 py-2" data-id="{{ product.id }}" style="border: 1.5px solid #333; background: white; border-radius: 25px; font-weight: 500;">
+                                        View Details
+                                    </button>
+
+                                    <p id="stock-val-{{ product.id }}" class="d-none">{{ product.available_qty }}</p>
+                                    <p id="status-val-{{ product.id }}" class="d-none">{{ product.status }}</p>
+                                    <p id="desc-val-{{ product.id }}" class="d-none">{{ product.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="noResults" class="text-center py-5 d-none">
+                        <i class="bi bi-search mb-3 d-block fs-1 text-muted"></i>
+                        <h4>No products found</h4>
+                        <p class="text-muted">Try adjusting your search or category filter.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="product-detail" class="detail-container">
+        <div class="detail-content">
+            <button id="close-detail" class="close-btn">&times;</button>
+            <h2 id="detail-name" class="fw-bold"></h2>
+            <p id="detail-price" class="fs-4 text-success fw-bold"></p>
+            <p id="detail-stock"></p>
+            <ul id="detail-description" class="detail-description text-start my-4"></ul>
+            
+            <div class="quantity-wrapper mb-4">
+                <div class="quantity-selector d-flex align-items-center justify-content-center">
+                    <div class="quantity-btn" id="qty-minus" style="cursor:pointer; user-select:none;">−</div>
+                    <span class="quantity-number mx-4 fs-5" id="qty-number">1</span>
+                    <div class="quantity-btn" id="qty-plus" style="cursor:pointer; user-select:none;">+</div>
+                </div>
+            </div>
+            
+            <div class="action-row">
+                <button class="add-cart-btn w-100 py-3" style="background: #198754; color: white; border: none; border-radius: 30px; font-weight: 600;">
+                    Add To Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+
+    <button id="scrollTopBtn" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">&copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- Helper Function for Styled Toasts ---
+        function showNotification(message, type = 'danger') {
+            const toastEl = document.getElementById('stockToast');
+            const messageEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+            
+            messageEl.innerText = message;
+            
+            // Set appearance based on type
+            if (type === 'danger') {
+                toastEl.classList.remove('bg-success');
+                toastEl.classList.add('bg-danger');
+                iconEl.className = 'bi bi-exclamation-triangle-fill me-2 fs-5';
+            } else {
+                toastEl.classList.remove('bg-danger');
+                toastEl.classList.add('bg-success');
+                iconEl.className = 'bi bi-check-circle-fill me-2 fs-5';
+            }
+            
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Navbar Role Logic ---
+            function updateAccountLink() {
+                const accountLink = document.getElementById("accountLink");
+                if (accountLink) {
+                    const userRole = localStorage.getItem('userRole');
+                    if (userRole === 'admin') {
+                        accountLink.textContent = 'Admin Panel';
+                        accountLink.href = '/admin/dashboard';
+                    } else if (userRole === 'user') {
+                        accountLink.textContent = 'Dashboard';
+                        accountLink.href = '/account';
+                    }
+                }
+            }
+            updateAccountLink();
+
+            // --- 2. Selectors ---
+            const modal = document.getElementById('product-detail');
+            const closeBtn = document.getElementById('close-detail');
+            const nameEl = document.getElementById('detail-name');
+            const priceEl = document.getElementById('detail-price');
+            const descEl = document.getElementById('detail-description');
+            const qtyEl = document.getElementById('qty-number');
+            const addToCartBtn = document.querySelector('.add-cart-btn');
+            const stockText = document.getElementById("detail-stock");
+
+            let currentProductId = null;
+            let currentQty = 1;
+
+            // --- 3. View Details Logic ---
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('view-detail-btn')) {
+                    const item = e.target.closest('.produce-item');
+                    currentProductId = e.target.dataset.id;
+                    
+                    const name = item.querySelector('h5').textContent;
+                    const price = item.querySelector('.text-success').textContent;
+                    
+                    // Fetch Stock + Status from hidden elements
+                    const stockVal = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
+                    const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
+
+                    nameEl.textContent = name;
+                    priceEl.textContent = price;
+                    const productDesc = document.getElementById('desc-val-' + currentProductId).textContent;
+descEl.innerHTML = `<li>${productDesc}</li>`;
+                    
+                    currentQty = 1;
+                    qtyEl.textContent = currentQty;
+
+                    // UPDATED LOGIC: Must be "In Stock" AND have stock > 0
+                    if (statusVal === "In Stock" && stockVal > 0) {
+                        stockText.textContent = `In Stock: ${stockVal} units available`;
+                        stockText.className = "text-success small fw-bold";
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.style.background = "#198754";
+                        addToCartBtn.textContent = "Add To Cart";
+                    } else {
+                        // Triggers if admin set status to OOS even if stock is 100
+                        stockText.textContent = "Currently Out of Stock";
+                        stockText.className = "text-danger small fw-bold";
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.style.background = "#ccc";
+                        addToCartBtn.textContent = "Sold Out";
+                    }
+
+                    modal.classList.add("active");
+                }
+            });
+
+            closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+            window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+            // --- 4. Quantity Buttons ---
+            document.getElementById("qty-minus").onclick = () => {
+                if (currentQty > 1) { currentQty--; qtyEl.textContent = currentQty; }
+            };
+
+            document.getElementById("qty-plus").onclick = () => {
+                const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
+                const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
+                
+                // Block quantity increase if status is OOS
+                if (statusVal === "In Stock" && currentQty < maxStock) { 
+                    currentQty++; 
+                    qtyEl.textContent = currentQty; 
+                } else if (statusVal === "Out of Stock") {
+                    showNotification("This item is currently sold out.", 'danger');
+                } else {
+                    showNotification("Cannot exceed available stock.", 'danger');
+                }
+            };
+
+            function handlePublicImageError(imgElement, iconId) {
+            const icon = document.getElementById(iconId);
+            
+            // Completely hide the broken img tag
+            imgElement.classList.add('d-none');
+            
+            // Reveal the professional placeholder icon
+            if (icon) {
+                icon.classList.remove('d-none');
+            }
+        }
+
+            // --- 5. Cart Storage Logic ---
+            addToCartBtn.onclick = () => {
+                if (!currentProductId) return;
+                const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
+                let cart = JSON.parse(localStorage.getItem("farmCart")) || [];
+                let existing = cart.find(i => i.id === currentProductId);
+
+                if (existing) {
+                    if (existing.qty + currentQty > maxStock) {
+                        showNotification(`Only ${maxStock} units total available.`, 'danger');
+                        return;
+                    }
+                    existing.qty += currentQty;
+                } else {
+                    cart.push({ id: currentProductId, name: nameEl.textContent, price: priceEl.textContent, qty: currentQty });
+                }
+
+                localStorage.setItem("farmCart", JSON.stringify(cart));
+                addToCartBtn.textContent = "✓ Added to Cart";
+                setTimeout(() => { window.location.href = "/orders"; }, 600);
+            };
+
+           
+
+            // --- 7. Scroll Behavior ---
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            window.onscroll = () => { scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
+            scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    </script>
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="stockToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex p-2">
+            <div class="toast-body d-flex align-items-center">
+                <i id="toastIcon" class="bi me-2 fs-5"></i>
+                <span id="toastMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

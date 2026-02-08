@@ -1,0 +1,266 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Home - Leaf Plant{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Happy Farm Logo" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link" href="/account">My Account</a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2">
+                    <a class="nav-link p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle; position: relative; top: -1px;"></i> 
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+         {% block content %}
+        <div id="farmCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#farmCarousel" data-bs-slide-to="0" class="active"></button>
+                <button type="button" data-bs-target="#farmCarousel" data-bs-slide-to="1"></button>
+                <button type="button" data-bs-target="#farmCarousel" data-bs-slide-to="2"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="{{ url_for('static', filename='image/farm1.jpg') }}" class="d-block w-100 hero-img" alt="Farm worker">
+                    <div class="carousel-caption d-block">
+                        <span class="text-uppercase small border-bottom pb-1 mb-2 d-inline-block">Nurtured with Love</span>
+                        <h1 class="display-3 fw-bold">Discover the Joy of Happy Farming</h1>
+                        <p class="lead">Welcome to Leaf Plant, where sustainable agriculture meets community joy. Join us in cultivating a vibrant ecosystem of wholesome produce and shared happiness.</p>
+                        <a href="/about" class="btn btn-hero mt-3">DISCOVER MORE</a>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{{ url_for('static', filename='image/1.jpg') }}" class="d-block w-100 hero-img" alt="Hydroponic lettuce growing">
+                    <div class="carousel-caption d-block">
+                        <span class="text-uppercase small border-bottom pb-1 mb-2 d-inline-block">Farm Fresh</span>
+                        <h1 class="display-3 fw-bold">Pesticide-Free, Locally Grown Greens</h1>
+                        <p class="lead">From our urban farm straight to your table—experience the difference in fresh, sustainable produce.</p>
+                        <a href="/product" class="btn btn-hero mt-3">SHOP PRODUCE</a>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{{ url_for('static', filename='image/2.jpg') }}" class="d-block w-100 hero-img" alt="Farm worker with produce">
+                    <div class="carousel-caption d-block">
+                        <span class="text-uppercase small border-bottom pb-1 mb-2 d-inline-block">Our Mission</span>
+                        <h1 class="display-3 fw-bold">Commitment to Singapore's Food Future</h1>
+                        <p class="lead">Supporting local food security through innovative technology and sustainable, closed-loop systems.</p>
+                        <a href="/article" class="btn btn-hero mt-3">LEARN MORE</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content py-5">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="image-container-wrapper">
+                        <div class="decorative-box top-left"></div>
+                        <div class="image-content-wrapper">
+                            <img src="{{ url_for('static', filename='image/3.jpg') }}" alt="Farm field" class="img-fluid rounded shadow">
+                        </div>
+                        <div class="nurtured-overlay"><i class="bi bi-leaf"></i> NURTURED WITH LOVE</div>
+                        <div class="decorative-box bottom-left"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-content-wrapper">
+                    <span class="text-green small d-block mb-2 about-us-text">About Us</span>
+                    <h2>Agriculture & Natural Product Farm</h2>
+                    <p>
+                        Leaf Plant is committed to sustainable farming and community well-being. We focus on producing high-quality, environmentally friendly crops through innovative practices that protect soil, conserve water, and support biodiversity.
+                        We believe in transparency, integrity, and nourishing both people and the planet—one harvest at a time.
+                    </p>
+                    <a href="/about" class="btn btn-about mt-3">Find Out More</a>
+                </div>
+            </div>
+        </div>
+        <section class="why-choose-us-banner py-5">
+            <div class="container text-center">
+                <h3 class="fw-bold mb-3">Why choose Leaf Plant?</h3>
+                <p class="lead-text">
+                    We control every step of the process to bring you the freshest, most affordable produce
+                    while supporting sustainable farming practices and community well-being.
+                </p>
+            </div>
+            <div class="counter-overlap-wrapper">
+                <div class="container">
+                    <div class="row text-center farm-stats-container mx-auto">
+                        <div class="col-6 col-lg-3 stats-item px-3 py-3">
+                            <div class="stat-number" data-count="20,000+">0</div>
+                            <div class="stat-description">Client satisfy</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="90%">0</div>
+                            <div class="stat-description">Farm Cultivate</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="500+">0</div>
+                            <div class="stat-description">Fast Delivery</div>
+                        </div>
+                        <div class="col-6 col-lg-3 stats-item border-start px-3 py-3">
+                            <div class="stat-number" data-count="24H">0</div>
+                            <div class="stat-description">Client satisfy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+         <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <div class="image-container-wrapper">
+                        <div class="decorative-box top-left"></div>
+                        <div class="image-content-wrapper">
+                            <img src="{{ url_for('static', filename='image/3.jpg') }}" alt="Farm field" class="img-fluid rounded shadow">
+                        </div>
+                        <div class="nurtured-overlay"><i class="bi bi-leaf"></i> COMMITTED TO GREEN GROWTH</div>
+                        <div class="decorative-box bottom-left"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-content-wrapper">
+                    <span class="text-green small d-block mb-2 about-us-text">Our Farm</span>
+                    <h2>Our Commitment to Sustainability</h2>
+                    <p> At Leaf Plant, sustainability guides everything we do. From responsible harvesting to reducing waste, we ensure every vegetable is
+                        grown with care for both people and the environment. Our eco-friendly practices help us deliver produce that’s fresh, nutritious, and planet-friendly.</p>
+                    <a href="/about" class="btn btn-about mt-3">Discover More</a>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top"><i class="bi bi-arrow-up"></i></button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="Happy Farm Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright &copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateAccountLink() {
+            const accountLink = document.getElementById("accountLink");
+            if (accountLink) {
+                // Removed the 'isLoggedIn' check so the link is always functional
+                const userRole = localStorage.getItem('userRole');
+
+                if (userRole === 'admin') {
+                    accountLink.textContent = 'Admin Panel';
+                    accountLink.href = '/admin/dashboard';
+                } else if (userRole === 'user') {
+                    accountLink.textContent = 'User Dashboard';
+                    accountLink.href = '/account';
+                } else {
+                    // Default state: still lets you click to go to the account/login page
+                    accountLink.textContent = 'Account';
+                    accountLink.href = '/account';
+                }
+            }
+        }
+
+        function startCounter(target) {
+            const endValue = parseInt(target.getAttribute('data-count').replace(/[^0-9]/g, ''));
+            const duration = 2000;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                let currentValue = Math.floor(progress * endValue);
+                let displayValue = currentValue.toLocaleString();
+                let suffix = target.getAttribute('data-count').replace(/[0-9,]/g, '').trim();
+                target.textContent = displayValue + suffix;
+                if (progress < 1) window.requestAnimationFrame(step);
+                else target.textContent = target.getAttribute('data-count');
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAccountLink();
+            const counters = document.querySelectorAll('.stat-number');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        startCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            counters.forEach(c => observer.observe(c));
+
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            window.onscroll = () => {
+                scrollTopBtn.style.display = (window.scrollY > 200) ? "block" : "none";
+            };
+            scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        });
+    </script>
+</body> 
+</html>

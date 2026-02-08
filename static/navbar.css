@@ -1,0 +1,33 @@
+﻿/* ----------------- Navbar ----------------- */
+.navbar {
+    transition: background-color 0.25s, box-shadow 0.25s;
+}
+
+    .navbar.bg-transparent {
+        background-color: transparent !important;
+        box-shadow: none;
+    }
+
+    .navbar.scrolled {
+        background-color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+.navbar-brand img {
+    height: 60px;
+    width: auto;
+    display: block;
+}
+
+.navbar-nav .nav-link.active {
+    color: #008037 !important;
+    border-bottom: 2px solid #008037;
+    padding-bottom: 5px; 
+}
+
+    .navbar-nav .nav-link.active:hover {
+        color: #5caf38 !important;
+    }
+.navbar-nav .nav-link:hover:not(.active) {
+    color: #5caf38 !important;
+}

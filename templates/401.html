@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+{% block title %}Login Required - Leaf Plant{% endblock %}
+
+{% block content %}
+<div class="container vh-100 d-flex align-items-center justify-content-center text-center mt-5">
+    <div class="card border-0 shadow-lg p-5 rounded-4" style="max-width: 500px;">
+        <i class="bi bi-person-badge text-primary display-1 mb-4"></i>
+        
+        <h1 class="fw-bold text-dark">401</h1>
+        <h4 class="text-muted mb-4">Whoops! Login Required.</h4>
+        
+        <p class="mb-4 text-secondary">
+            You need to be logged in to access this part of the garden. 
+        </p>
+
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('account') }}" class="btn btn-success btn-lg rounded-pill shadow-sm">
+                Go to Login Page
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-link text-muted">Return Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+/* --- orders.css --- */
+/* body {
+    background-color: #f8fafc;
+} */
+
+.fade-in { animation: fadeIn 0.8s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.back-link { transition: color 0.2s ease; color: #2d3748; }
+.back-link:hover { color: #008037 !important; }
+
+/* Cart Items */
+.cart-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cart-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 128, 55, 0.08) !important;
+    border-color: #d1e7dd !important;
+}
+
+.cart-img-wrapper {
+    width: 100px; height: 100px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+}
+.cart-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Qty Control */
+.qty-control button {
+    width: 32px; height: 32px; background: white; color: #4a5568; border: 1px solid #e2e8f0; transition: all 0.2s;
+}
+.qty-control button:hover { background: #008037; color: white; border-color: #008037; }
+
+/* Buttons */
+.btn-add-more {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 15px;
+    background-color: white;
+    border: 2px dashed #cbd5e0; border-radius: 50px;
+    color: #718096; font-weight: 600; text-decoration: none; transition: all 0.3s ease;
+}
+.btn-add-more:hover {
+    border-color: #008037; background-color: rgba(0, 128, 55, 0.04); color: #008037;
+}
+
+.reward-choice-card {
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .reward-active {
+            border-color: #198754 !important;
+            background-color: #f0fff4;
+        }

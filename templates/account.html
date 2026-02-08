@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Leaf Plant</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" alt="Logo Png" height="70">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/product">Our Produce</a></li>
+                <li class="nav-item"><a class="nav-link" href="/article">Articles</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('product.global_reviews') }}">Reviews</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.contact') }}">Contact Us</a></li>
+                
+                <li class="nav-item">
+                    {% if not session.get('user_id') %}
+                        <a class="nav-link active" href="/account">Login</a>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <a class="nav-link" href="/admin/dashboard">Admin Panel</a>
+                    {% elif session.get('user_role') == 'leader' %}
+                        <a class="nav-link" href="/leader">Leader Panel</a>
+                    {% else %}
+                        <a class="nav-link active" aria-current="page" href="/account">
+                            My Account
+                        </a>
+                    {% endif %}
+                </li>
+
+                {% if session.get('user_id') and session.get('user_role') == 'user' %}
+                <li class="nav-item ms-lg-2">
+                    <a class="nav-link {% if request.path == '/orders' %}active{% endif %} p-0" href="/orders" id="orderLink" title="My Order">
+                        <i class="bi bi-cart3 fs-5" style="vertical-align: middle;"></i>  
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-content">
+        {% block content %}
+        <section class="py-5">
+            <div class="container d-flex justify-content-center align-items-center auth-container">
+                <div class="auth-card">
+                    <div class="auth-form-side">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <ul class="nav nav-pills nav-justified nav-pills-auth mb-4" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-signup-tab" data-bs-toggle="pill" data-bs-target="#pills-signup" type="button" role="tab">Sign up</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">Log in</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="pills-tabContent">
+                            <div class="tab-pane fade" id="pills-signup" role="tabpanel">
+                                <h2 class="mb-2">Create Your Account</h2>
+                                <p class="small-text subtitle">Join Leaf Plant today</p>
+                                <form action="{{ url_for('auth.signup') }}" method="POST">
+                                <div class="mb-3">
+                                    <label for="signupName" class="form-label">Full name</label>
+                                    <input type="text" class="form-control" id="signupName" name="name" placeholder="Enter your name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="signupEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="signupEmail" name="email" placeholder="Enter your email" required>
+                                </div>
+                                <div class="mb-3">
+                                <label for="signupPhone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="signupPhone" name="phone" 
+                                    placeholder="e.g. +65 9123 4567" 
+                                    required 
+                                    oninput="validatePhoneNumber(this)">
+                                <div class="invalid-feedback">
+                                    Please enter at least 8 digits (excluding country code).
+                                </div>
+                            </div>
+
+                                <div class="row g-2 mb-1">
+                                <div class="col-6">
+                                    <label for="signupPostal" class="form-label">Postal Code</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="signupPostal" name="postal_code" 
+                                            placeholder="123456" required maxlength="6" pattern="\d{6}"
+                                            oninput="handlePostalInput(this)" title="Must be exactly 6 numbers">
+                                        <span class="input-group-text d-none" id="postalSpinner">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        </span>
+                                    </div>
+                                    <div id="postalStatus" class="form-text text-muted" style="font-size: 0.8rem; min-height: 20px;"></div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="signupUnit" class="form-label">Unit Number</label>
+                                    <input type="text" class="form-control" id="signupUnit" name="unit_number" 
+                                        placeholder="#01-01" maxlength="7"
+                                        oninput="validateUnit(this)">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="signupStreet" class="form-label">Street Address</label>
+                                <input type="text" class="form-control bg-light" id="signupStreet" name="street_address" 
+                                    placeholder="Auto-filled from Postal Code..." readonly required>
+                            </div>
+                                <div class="mb-3">
+                                    <label for="signupPassword" class="form-label">Password</label>
+                                    <div class="input-group-password">
+                                        <input type="password" class="form-control" id="signupPassword" name="password" placeholder="Enter your password" required minlength="6">
+                                        <i class="bi bi-eye-slash toggle-password" data-target="signupPassword"></i>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="repeatPassword" class="form-label">Confirm password</label>
+                                    <div class="input-group-password">
+                                        <input type="password" class="form-control" id="repeatPassword" name="confirm_password" placeholder="Enter your password" required>
+                                        <i class="bi bi-eye-slash toggle-password" data-target="repeatPassword"></i>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-signup-main w-100">Sign up</button>
+                            </form>
+                            </div>
+
+                            <div class="tab-pane fade show active" id="pills-login" role="tabpanel">
+                                <h2 class="mb-2">Welcome Back!</h2>
+                                <p class="small-text subtitle">Log in to view your orders and personalized settings.</p>
+                                <form action="{{ url_for('auth.login') }}" method="POST">
+                                    <div class="mb-3">
+                                        <label for="loginEmail" class="form-label">Email address</label>
+                                        <input type="email" class="form-control" id="loginEmail" name="email" placeholder="Enter your email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="loginPassword" class="form-label">Password</label>
+                                        <div class="input-group-password">
+                                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Enter your password" required>
+                                            <i class="bi bi-eye-slash toggle-password" data-target="loginPassword"></i>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="remember" id="rememberMeCheck">
+                                            <label class="form-check-label small-text" for="rememberMeCheck">Remember Me</label>
+                                        </div>
+                                        <div class="ms-auto">
+                                            <a href="{{ url_for('auth.forgot_password') }}" class="small-text text-decoration-none">Forgot Password?</a>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-signup-main w-100">Log In</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auth-image-side d-none d-md-flex">
+                        <div class="image-overlay"></div>
+                        <div class="testimonial-content d-flex flex-column align-items-end" style="position: relative; z-index: 2;">
+                            <div class="testimonial-box">
+                                <p class="mb-2 small-text" style="color: white; line-height: 1.4;">
+                                    Leaf Plant has transformed the way I shop for fresh produce! The quality is amazing and delivery is always on time.
+                                </p>
+                                <p class="mb-0 small-text fw-bold">Sarah - Regular Customer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal fade" id="signupErrorModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-danger">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Registration Error</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center p-4">
+                            <i class="bi bi-shield-lock-fill text-danger display-1 mb-3"></i>
+                            <h4 class="mb-2 fw-bold text-danger">Passwords Do Not Match</h4>
+                            <p class="text-muted">Please double-check that your password and confirmation password are identical.</p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">Try Again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </section>
+        {% endblock %}
+    </main>
+
+    <a class="whatsapp-float-button" href="https://wa.me/6580262125" target="_blank" title="Chat with AI Agent">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+    <button id="scrollTopBtn" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <footer class="custom-footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo_Name.png') }}" alt="AI Logo">
+            </div>
+            <div class="footer-info">
+                <h5>Address</h5>
+                <p>123 Main Street<br>Singapore 123456</p>
+            </div>
+            <div class="footer-info">
+                <h5>Email</h5>
+                <p>info@AI.com.sg</p>
+            </div>
+            <div class="footer-socials">
+                <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+        <hr>
+        <p class="footer-copy">Copyright &copy; 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 👇 UPDATED: Use Modal instead of Alert
+        document.getElementById('pills-signup')?.querySelector('form')?.addEventListener('submit', function(e) {
+            const password = document.getElementById('signupPassword').value;
+            const repeat = document.getElementById('repeatPassword').value;
+            
+            if (password !== repeat) {
+                e.preventDefault(); // Stop submission
+                const errorModal = new bootstrap.Modal(document.getElementById('signupErrorModal'));
+                errorModal.show();
+            }
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        });
+
+        const scrollTopBtn = document.getElementById("scrollTopBtn");
+        window.onscroll = function () {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                scrollTopBtn.style.display = "block";
+            } else {
+                scrollTopBtn.style.display = "none";
+            }
+        };
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function validatePostal(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }
+
+    function validateUnit(input) {
+        let val = input.value;
+        let hashCount = (val.match(/#/g) || []).length;
+        
+        if (hashCount > 1) {
+            let firstHashIndex = val.indexOf('#');
+            let before = val.substring(0, firstHashIndex + 1);
+            let after = val.substring(firstHashIndex + 1).replace(/#/g, '');
+            input.value = before + after;
+        }
+    }
+
+    function validatePhoneNumber(input) {
+        // 1. Strip everything that isn't a number (remove spaces, +, -)
+        const digitsOnly = input.value.replace(/\D/g, '');
+        
+        // 2. Check if the user typed a '+' at the start
+        const hasPlus = input.value.trim().startsWith('+');
+
+        // 3. Define Minimum Length Rule
+        // If '+' is present, we need more digits (Country Code + Number) -> Min 10
+        // If no '+', we just need the local number -> Min 8
+        const minLength = hasPlus ? 10 : 8;
+
+        // 4. Validate
+        if (digitsOnly.length < minLength) {
+            input.setCustomValidity(`Please enter at least ${minLength - digitsOnly.length} more numbers.`);
+            input.classList.add('is-invalid'); // Shows the red border/text
+        } else {
+            input.setCustomValidity(''); // Valid
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        }
+    }
+    function handlePostalInput(input) {
+        // 1. Clean input (Digits only)
+        input.value = input.value.replace(/[^0-9]/g, '');
+        
+        const postalCode = input.value;
+        const streetInput = document.getElementById('signupStreet');
+        const statusDiv = document.getElementById('postalStatus');
+        const spinner = document.getElementById('postalSpinner');
+
+        // 2. Only fetch if exactly 6 digits
+        if (postalCode.length === 6) {
+            // Show loading state
+            spinner.classList.remove('d-none');
+            statusDiv.textContent = "Searching OneMap...";
+            statusDiv.className = "form-text text-primary";
+            streetInput.placeholder = "Searching...";
+
+            // 3. Call OneMap API
+            fetch(`https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=N&getAddrDetails=Y&pageNum=1`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading
+                    spinner.classList.add('d-none');
+
+                    if (data.results && data.results.length > 0) {
+                        // Success! Construct Address
+                        let result = data.results[0];
+                        let fullAddress = result.BLK_NO + " " + result.ROAD_NAME;
+                        
+                        if (result.BUILDING !== "NIL") {
+                            fullAddress += ", " + result.BUILDING;
+                        }
+
+                        // Update UI
+                        streetInput.value = fullAddress;
+                        streetInput.classList.remove('is-invalid');
+                        streetInput.classList.add('is-valid');
+                        
+                        statusDiv.textContent = "✅ Address found!";
+                        statusDiv.className = "form-text text-success";
+                        
+                        // Optional: Move focus to Unit Number for better UX
+                        document.getElementById('signupUnit').focus();
+                    } else {
+                        // Not Found
+                        streetInput.value = "";
+                        streetInput.placeholder = "Address not found";
+                        statusDiv.textContent = "❌ Invalid Postal Code";
+                        statusDiv.className = "form-text text-danger";
+                    }
+                })
+                .catch(error => {
+                    spinner.classList.add('d-none');
+                    console.error("OneMap Error:", error);
+                    statusDiv.textContent = "⚠️ Error fetching address";
+                });
+        } else {
+            // Reset if user deletes digits
+            streetInput.value = "";
+            streetInput.placeholder = "Auto-filled from Postal Code...";
+            statusDiv.textContent = "";
+            streetInput.classList.remove('is-valid');
+            spinner.classList.add('d-none');
+        }
+    }
+    </script>
+</body>
+</html>
