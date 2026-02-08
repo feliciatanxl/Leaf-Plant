@@ -26,7 +26,7 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 # Initialize OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Import WhatsApp Helper (Graceful fallback if missing)
+# Import WhatsApp Helper
 try:
     from whatsapp.app import send_whatsapp_message
 except ImportError:
@@ -74,7 +74,7 @@ def dashboard():
     group_leaders = GroupLeader.query.all()
     customers = Customer.query.order_by(Customer.id.desc()).all()
     
-    # 🌟 NEW: Fetch Promo Codes for the Dashboard Table
+    # Fetch Promo Codes for the Dashboard Table
     promos = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
     
     # Counts
@@ -98,7 +98,7 @@ def dashboard():
                            total_commissions=total_commissions,
                            group_leaders=group_leaders,
                            customers=customers,
-                           promos=promos, # <--- Pass this to HTML
+                           promos=promos,
                            admin_count=admin_count,
                            user_count=user_count,
                            leader_count=leader_count,
@@ -147,18 +147,15 @@ def validate_promo():
     return jsonify({"valid": False, "message": "Invalid code."}), 400
 
 # --- PRODUCT MANAGEMENT ---
-
-
 @admin_bp.route("/products/add", methods=['POST'])
 def add_product():
     try:
         # 1. Handle the Image Upload first
-        image_file = request.files.get('image_file') # Use .files, not .form
-        firebase_url = 'default_product.jpg' # Fallback
+        image_file = request.files.get('image_file')
+        firebase_url = 'default_product.jpg' 
 
         if image_file and image_file.filename != '':
             bucket = storage.bucket()
-            # Create a unique filename to prevent overwriting
             ext = image_file.filename.split('.')[-1]
             unique_filename = f"products/{uuid.uuid4()}.{ext}"
             
@@ -179,7 +176,7 @@ def add_product():
             price=float(request.form.get('price', 0.0)),
             category=request.form.get('category', 'leafy'),
             status="In Stock" if stock_val > 0 else "Out of Stock",
-            image_file=firebase_url # Store the Firebase URL here
+            image_file=firebase_url 
         )
         
         db.session.add(new_product)

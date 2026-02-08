@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message 
 from models import db, Customer, mail, find_leader_by_address
+import os
 
 # 1. Define the Blueprint
 auth = Blueprint('auth', __name__)
@@ -213,34 +214,70 @@ def reset_password(token):
             
     return render_template('reset_password.html', token=token)
 
-# 6. ADMIN SEEDING (Unchanged)
+# 6. ADMIN SEEDING 
+# def create_admin():
+#     admin = Customer.query.filter_by(email='admin@leafplant.com').first()
+#     if admin:
+#         if admin.role != 'admin':
+#             admin.role = 'admin'
+#             db.session.commit()
+#             print("🔄 Existing admin user role updated to 'admin'")
+#         else:
+#             print("❌ Admin already exists with correct role!")
+#         return
+    
+#     admin_user = Customer(
+#         name='Admin User',
+#         email='admin@leafplant.com',
+#         phone='ADMIN_SYSTEM_01', 
+#         password_hash=generate_password_hash('adminpass', method='scrypt'),
+#         role='admin' 
+#     )
+#     try:
+#         db.session.add(admin_user)
+#         db.session.commit()
+#         print("✅ Admin created successfully with 'admin' role!")
+#     except Exception as e:
+#         db.session.rollback()
+#         print(f"❌ Admin Seed Error: {e}")
+
 def create_admin():
-    admin = Customer.query.filter_by(email='admin@leafplant.com').first()
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@leafplant.com')
+    admin_pass = os.getenv('ADMIN_PASSWORD') 
+
+    if not admin_pass:
+        print("⚠️ WARNING: ADMIN_PASSWORD not found in .env. Admin creation skipped.")
+        return
+
+    admin = Customer.query.filter_by(email=admin_email).first()
+    
     if admin:
         if admin.role != 'admin':
             admin.role = 'admin'
             db.session.commit()
             print("🔄 Existing admin user role updated to 'admin'")
         else:
-            print("❌ Admin already exists with correct role!")
+            print("✅ Admin already exists with correct role!")
         return
     
-    admin_user = Customer(
-        name='Admin User',
-        email='admin@leafplant.com',
-        phone='ADMIN_SYSTEM_01', 
-        password_hash=generate_password_hash('adminpass', method='scrypt'),
-        role='admin' 
-    )
     try:
+        hashed_pw = generate_password_hash(admin_pass, method='scrypt')
+        
+        admin_user = Customer(
+            name='Admin User',
+            email=admin_email,
+            phone='ADMIN_SYSTEM_01', 
+            password_hash=hashed_pw,
+            role='admin' 
+        )
         db.session.add(admin_user)
         db.session.commit()
-        print("✅ Admin created successfully with 'admin' role!")
+        print("✅ Admin created successfully with SECURE password!")
+        
     except Exception as e:
         db.session.rollback()
         print(f"❌ Admin Seed Error: {e}")
 
-# This part is only for running auth.py directly (rarely used in blueprints)
 if __name__ == "__main__":
     from main import create_app
     app = create_app()
