@@ -284,12 +284,22 @@
             
             const productInfo = products_db_data[item.id];
             const maxStock = productInfo ? productInfo.stock : 0;
-            const imageFile = productInfo && productInfo.image ? productInfo.image : 'default_product.jpg';
+            
+            // 1. Get the raw image filename from the database
+            const rawImage = productInfo && productInfo.image ? productInfo.image : 'default_product.jpg';
+            
+            // 2. Determine if it is a Cloud (Firebase) URL or a Local File
+            let finalImageSrc;
+            if (rawImage.startsWith('http')) {
+                finalImageSrc = rawImage; // Use the Firebase URL directly
+            } else {
+                finalImageSrc = `/static/image/${rawImage}`; // Add local folder path
+            }
 
             const html = `
                 <div class="cart-card d-flex align-items-center bg-white p-3 mb-3 rounded-3 shadow-sm border">
                     <div class="me-3" style="width: 80px; height: 80px; overflow: hidden; border-radius: 10px;">
-                        <img src="/static/image/${imageFile}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="${finalImageSrc}" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between">
