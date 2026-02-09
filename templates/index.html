@@ -154,16 +154,30 @@
         </section>
 
         {% if session.get('user_id') %}
-        <!-- Recommendations Section -->
         <div class="container py-5">
             <div class="recommendations-section" id="recommendations-section">
                 <h2 class="text-center">🌱 Recommended for You</h2>
+                
                 <div id="recommendations-loading" class="recommendations-loading">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
-                <div id="recommendations-grid" class="recommendations-grid" style="display: none;"></div>
+
+                <div id="slider-container" style="display: none; position: relative; padding: 0 20px;">
+                    
+                    <button class="slider-btn prev-btn" onclick="scrollSlider(-1)">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    <div id="recommendations-grid" class="recommendations-grid">
+                        </div>
+
+                    <button class="slider-btn next-btn" onclick="scrollSlider(1)">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+
                 <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
                     <i class="bi bi-inbox"></i>
                     <p>No recommendations available at this time.</p>
@@ -176,7 +190,7 @@
         </div>
         {% endif %}
 
-         <div class="container py-5">
+         <div class="container pt-2 pb-5"> 
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="image-container-wrapper">
@@ -229,12 +243,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // --- 1. NEW: Scroll Function for the Buttons ---
+        function scrollSlider(direction) {
+            const container = document.getElementById('recommendations-grid');
+            const scrollAmount = 300; // Distance to scroll
+            
+            if (direction === 1) {
+                container.scrollLeft += scrollAmount;
+            } else {
+                container.scrollLeft -= scrollAmount;
+            }
+        }
+
         function updateAccountLink() {
             const accountLink = document.getElementById("accountLink");
             if (accountLink) {
-                // Removed the 'isLoggedIn' check so the link is always functional
                 const userRole = localStorage.getItem('userRole');
-
                 if (userRole === 'admin') {
                     accountLink.textContent = 'Admin Panel';
                     accountLink.href = '/admin/dashboard';
@@ -242,7 +266,6 @@
                     accountLink.textContent = 'User Dashboard';
                     accountLink.href = '/account';
                 } else {
-                    // Default state: still lets you click to go to the account/login page
                     accountLink.textContent = 'Account';
                     accountLink.href = '/account';
                 }
@@ -268,6 +291,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateAccountLink();
+            
+            // Counter Animation
             const counters = document.querySelectorAll('.stat-number');
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -279,11 +304,14 @@
             }, { threshold: 0.5 });
             counters.forEach(c => observer.observe(c));
 
+            // Scroll to Top Button
             const scrollTopBtn = document.getElementById("scrollTopBtn");
-            window.onscroll = () => {
-                scrollTopBtn.style.display = (window.scrollY > 200) ? "block" : "none";
-            };
-            scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            if (scrollTopBtn) {
+                window.onscroll = () => {
+                    scrollTopBtn.style.display = (window.scrollY > 200) ? "block" : "none";
+                };
+                scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            }
 
             // Load recommendations if user is logged in
             {% if session.get('user_id') %}
@@ -291,10 +319,11 @@
             {% endif %}
         });
 
-        // Recommendations loading function
+        // --- 2. UPDATED: Recommendation Loader ---
         function loadRecommendations() {
             const loadingEl = document.getElementById('recommendations-loading');
             const gridEl = document.getElementById('recommendations-grid');
+            const sliderContainer = document.getElementById('slider-container'); // Get the wrapper
             const emptyEl = document.getElementById('recommendations-empty');
             const errorEl = document.getElementById('recommendations-error');
 
@@ -309,7 +338,12 @@
                     loadingEl.style.display = 'none';
                     
                     if (data.recommendations && data.recommendations.length > 0) {
-                        gridEl.style.display = 'grid';
+                        // SHOW the Slider Container (Buttons + Grid)
+                        sliderContainer.style.display = 'block';
+                        
+                        // Set display to FLEX (Vital for horizontal scrolling)
+                        gridEl.style.display = 'flex'; 
+                        
                         emptyEl.style.display = 'none';
                         errorEl.style.display = 'none';
                         
@@ -323,8 +357,8 @@
                                 <div class="recommendation-card-body">
                                     <h5 class="recommendation-card-title">${rec.product_name}</h5>
                                     <div class="recommendation-price">$${rec.price.toFixed(2)}</div>
-                                    <p class="recommendation-reason">${rec.reason}</p>
                                     <span class="recommendation-confidence ${rec.confidence}">${rec.confidence}</span>
+                                    <p class="recommendation-reason">${rec.reason}</p>
                                     <button class="recommendation-btn" onclick="window.location.href='/product'">
                                         View Product
                                     </button>
@@ -332,8 +366,9 @@
                             </div>
                         `).join('');
                     } else {
+                        // Hide slider if empty
+                        sliderContainer.style.display = 'none';
                         emptyEl.style.display = 'block';
-                        gridEl.style.display = 'none';
                         errorEl.style.display = 'none';
                     }
                 })
@@ -341,7 +376,8 @@
                     console.error('Error loading recommendations:', error);
                     loadingEl.style.display = 'none';
                     errorEl.style.display = 'block';
-                    gridEl.style.display = 'none';
+                    // Hide slider on error
+                    if(sliderContainer) sliderContainer.style.display = 'none';
                     emptyEl.style.display = 'none';
                 });
         }

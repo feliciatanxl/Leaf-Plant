@@ -1,17 +1,14 @@
 /* Recommendations Section Styling */
 
-.recommendations-section {
-    margin: 3rem 0;
-    padding: 2rem 0;
-}
-
 .recommendations-section h2 {
     font-size: 2rem;
     font-weight: bold;
     margin-bottom: 1.5rem;
     color: #198754;
+    padding-left: 0.5rem; /* Aligns title with the cards */
 }
 
+/* Loading Spinner */
 .recommendations-loading {
     display: flex;
     justify-content: center;
@@ -26,31 +23,60 @@
     color: #198754;
 }
 
+/* --- THE CAROUSEL CONTAINER --- */
+/* This transforms the grid into a scrollable slider */
 .recommendations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    display: flex;             /* Flexbox allows items to sit in a row */
+    overflow-x: auto;          /* Enables horizontal scrolling */
+    gap: 1.25rem;              /* Space between cards */
+    padding: 1rem 0.5rem;      /* Padding helps shadows not get cut off */
+    
+    /* Smooth Scrolling Physics */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
+    scroll-snap-type: x mandatory;     /* Snap effect when you stop scrolling */
 }
 
+/* Custom Scrollbar (Optional: Makes it look cleaner) */
+.recommendations-grid::-webkit-scrollbar {
+    height: 8px;
+}
+.recommendations-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+.recommendations-grid::-webkit-scrollbar-thumb {
+    background: #198754; /* Green handle */
+    border-radius: 4px;
+}
+
+/* --- SMALLER CARDS --- */
 .recommendation-card {
+    /* Fixed width: This is what makes them smaller and uniform */
+    flex: 0 0 220px;           /* Sets a fixed width of 220px */
+    width: 220px;              /* Fallback width */
+    
     background: white;
-    border-radius: 15px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 100%;
+    height: auto;              /* Height adjusts to content */
     display: flex;
     flex-direction: column;
+    
+    /* Ensures card snaps to the start */
+    scroll-snap-align: start;
 }
 
 .recommendation-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
 .recommendation-image-container {
-    height: 200px;
+    height: 150px; /* Reduced height (was 200px) */
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -66,70 +92,73 @@
 }
 
 .recommendation-card-body {
-    padding: 1.25rem;
+    padding: 1rem;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
 .recommendation-card-title {
-    font-size: 1.1rem;
+    font-size: 1rem; /* Smaller font (was 1.1rem) */
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
     color: #333;
+    
+    /* Prevent title from wrapping to too many lines */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .recommendation-price {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: bold;
     color: #198754;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .recommendation-reason {
-    font-size: 0.9rem;
+    font-size: 0.85rem; /* Smaller text for compact look */
     color: #666;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     flex-grow: 1;
     font-style: italic;
+    
+    /* Limit description to 3 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .recommendation-confidence {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.8rem;
+    align-self: flex-start;
 }
 
-.recommendation-confidence.high {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.recommendation-confidence.medium {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.recommendation-confidence.low {
-    background-color: #f8d7da;
-    color: #721c24;
-}
+.recommendation-confidence.high { background-color: #d4edda; color: #155724; }
+.recommendation-confidence.medium { background-color: #fff3cd; color: #856404; }
+.recommendation-confidence.low { background-color: #f8d7da; color: #721c24; }
 
 .recommendation-btn {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 1.5px solid #333;
     background: white;
-    border-radius: 25px;
+    border-radius: 20px;
     font-weight: 500;
+    font-size: 0.9rem;
     color: #333;
     text-decoration: none;
     text-align: center;
     transition: all 0.3s ease;
     display: inline-block;
+    margin-top: auto; /* Pushes button to bottom */
 }
 
 .recommendation-btn:hover {
@@ -138,18 +167,20 @@
     border-color: #198754;
 }
 
+/* Empty State */
 .recommendations-empty {
     text-align: center;
     padding: 3rem;
     color: #666;
+    width: 100%;
 }
-
 .recommendations-empty i {
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
 }
 
+/* Error State */
 .recommendations-error {
     text-align: center;
     padding: 2rem;
@@ -157,16 +188,57 @@
     background-color: #f8d7da;
     border-radius: 10px;
     margin: 1rem 0;
+    width: 100%;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .recommendations-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
+    .recommendation-card {
+        flex: 0 0 200px; /* Even smaller cards on mobile */
+        width: 200px;
     }
     
     .recommendations-section h2 {
         font-size: 1.5rem;
     }
+}
+/* --- SLIDER BUTTON STYLES --- */
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 10;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: #198754;
+}
+
+.slider-btn:hover {
+    background-color: #198754;
+    color: white;
+    box-shadow: 0 6px 15px rgba(25, 135, 84, 0.3);
+}
+
+.slider-btn i {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Position the buttons */
+.prev-btn { left: -10px; }
+.next-btn { right: -10px; }
+
+/* Hide buttons on mobile (touch scrolling is better there) */
+@media (max-width: 768px) {
+    .slider-btn { display: none; }
+    #slider-container { padding: 0 !important; }
 }
