@@ -250,6 +250,14 @@ def create_app():
 
     return app
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+#     app = create_app()
+#     app.run(debug=True, port=5001)
+if __name__ == '__main__':
+    from waitress import serve
+    
     app = create_app()
-    app.run(debug=True, port=5001)
+    
+    # Changed 8080 -> 5001
+    print("🌿 Leaf Plant Server is running on http://0.0.0.0:5001")
+    serve(app, host="0.0.0.0", port=5001)
