@@ -71,13 +71,13 @@
                     
                     <h6 class="fw-bold mb-3" style="letter-spacing: 1px;">SEARCH PRODUCTS:</h6>
                     <div class="search-box mb-4">
-                       
-                        <form action="{{ url_for('product.list_products') }}" method="GET">
-    <input type="text" name="search" id="search" class="form-control rounded-pill" placeholder="Search products..." value="{{ search_val }}">
-    <input type="hidden" name="category" value="{{ active_category }}">
-</form>
-                
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="liveSearchInput" class="form-control bg-white border-start-0 rounded-end-pill shadow-none" placeholder="Type to filter..." autocomplete="off">
                     </div>
+                </div>
 
                    <h6 class="fw-bold mb-3" style="letter-spacing: 1px;">PRODUCT CATEGORIES</h6>
 <ul class="product-category-list list-unstyled">
@@ -359,6 +359,40 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
             const scrollTopBtn = document.getElementById("scrollTopBtn");
             window.onscroll = () => { scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
             scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+            // --- 6. LIVE SEARCH FILTERING ---
+            const searchInput = document.getElementById('liveSearchInput');
+            const productItems = document.querySelectorAll('.produce-item');
+            const noResultsMsg = document.getElementById('noResults');
+
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function(e) {
+                    const term = e.target.value.toLowerCase().trim();
+                    let hasVisibleItems = false;
+
+                    productItems.forEach(item => {
+                        // 1. Find the product name inside the card
+                        const productName = item.querySelector('h5').textContent.toLowerCase();
+                        
+                        // 2. Check if the name contains the search term
+                        if (productName.includes(term)) {
+                            item.classList.remove('d-none'); // Show it
+                            hasVisibleItems = true;
+                        } else {
+                            item.classList.add('d-none'); // Hide it
+                        }
+                    });
+
+                    // 3. Show/Hide "No Results" message
+                    if (hasVisibleItems) {
+                        noResultsMsg.classList.add('d-none');
+                        noResultsMsg.classList.remove('d-block');
+                    } else {
+                        noResultsMsg.classList.remove('d-none');
+                        noResultsMsg.classList.add('d-block');
+                    }
+                });
+            }
         });
     </script>
     <div class="toast-container position-fixed top-0 end-0 p-3">
