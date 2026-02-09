@@ -102,27 +102,40 @@
                 </div>
 
                 <div class="col-md-9">
-                    {% if session.get('user_id') %}
-                    <!-- Recommendations Section -->
-                    <div class="recommendations-section mb-4">
-                        <h2>🌱 Recommended for You</h2>
-                        <div id="recommendations-loading" class="recommendations-loading">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                        <div id="recommendations-grid" class="recommendations-grid" style="display: none;"></div>
-                        <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
-                            <i class="bi bi-inbox"></i>
-                            <p>No recommendations available at this time.</p>
-                        </div>
-                        <div id="recommendations-error" class="recommendations-error" style="display: none;">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            <p>Unable to load recommendations. Please try again later.</p>
+                {% if session.get('user_id') %}
+                <div class="recommendations-section mb-4" id="recommendations-section">
+                    <h2>🌱 Recommended for You</h2>
+                    
+                    <div id="recommendations-loading" class="recommendations-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
-                    {% endif %}
 
+                    <div id="slider-container" style="display: none; position: relative; padding: 0 20px;">
+                        
+                        <button class="slider-btn prev-btn" onclick="scrollSlider(-1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+
+                        <div id="recommendations-grid" class="recommendations-grid">
+                            </div>
+
+                        <button class="slider-btn next-btn" onclick="scrollSlider(1)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
+                        <i class="bi bi-inbox"></i>
+                        <p>No recommendations available at this time.</p>
+                    </div>
+                    <div id="recommendations-error" class="recommendations-error" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p>Unable to load recommendations.</p>
+                    </div>
+                </div>
+                {% endif %}
                     <div class="row g-4" id="productGrid">
                         {% for product in products %}
                         <div class="col-md-4 produce-item" data-category="{{ product.category|lower }}">
@@ -223,23 +236,38 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- Helper Function for Styled Toasts ---
+        // --- 1. SLIDER NAVIGATION LOGIC ---
+        function scrollSlider(direction) {
+            const container = document.getElementById('recommendations-grid');
+            const scrollAmount = 300; // Distance to scroll per click
+            
+            if (container) {
+                if (direction === 1) {
+                    container.scrollLeft += scrollAmount;
+                } else {
+                    container.scrollLeft -= scrollAmount;
+                }
+            }
+        }
+
+        // --- 2. NOTIFICATION HELPER ---
         function showNotification(message, type = 'danger') {
             const toastEl = document.getElementById('stockToast');
             const messageEl = document.getElementById('toastMessage');
             const iconEl = document.getElementById('toastIcon');
             
+            if (!toastEl || !messageEl) return;
+
             messageEl.innerText = message;
             
-            // Set appearance based on type
             if (type === 'danger') {
                 toastEl.classList.remove('bg-success');
                 toastEl.classList.add('bg-danger');
-                iconEl.className = 'bi bi-exclamation-triangle-fill me-2 fs-5';
+                if (iconEl) iconEl.className = 'bi bi-exclamation-triangle-fill me-2 fs-5';
             } else {
                 toastEl.classList.remove('bg-danger');
                 toastEl.classList.add('bg-success');
-                iconEl.className = 'bi bi-check-circle-fill me-2 fs-5';
+                if (iconEl) iconEl.className = 'bi bi-check-circle-fill me-2 fs-5';
             }
             
             const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
@@ -248,7 +276,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- 1. Navbar Role Logic ---
+            // --- 3. NAVBAR ROLE LOGIC ---
             function updateAccountLink() {
                 const accountLink = document.getElementById("accountLink");
                 if (accountLink) {
@@ -264,7 +292,7 @@
             }
             updateAccountLink();
 
-            // --- 2. Selectors ---
+            // --- 4. MODAL & CART SELECTORS ---
             const modal = document.getElementById('product-detail');
             const closeBtn = document.getElementById('close-detail');
             const nameEl = document.getElementById('detail-name');
@@ -277,7 +305,7 @@
             let currentProductId = null;
             let currentQty = 1;
 
-            // --- 3. View Details Logic ---
+            // --- 5. VIEW DETAILS LOGIC ---
             document.addEventListener('click', (e) => {
                 if (e.target.classList.contains('view-detail-btn')) {
                     const item = e.target.closest('.produce-item');
@@ -286,19 +314,17 @@
                     const name = item.querySelector('h5').textContent;
                     const price = item.querySelector('.text-success').textContent;
                     
-                    // Fetch Stock + Status from hidden elements
                     const stockVal = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                     const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
 
                     nameEl.textContent = name;
                     priceEl.textContent = price;
                     const productDesc = document.getElementById('desc-val-' + currentProductId).textContent;
-descEl.innerHTML = `<li>${productDesc}</li>`;
+                    descEl.innerHTML = `<li>${productDesc}</li>`;
                     
                     currentQty = 1;
                     qtyEl.textContent = currentQty;
 
-                    // UPDATED LOGIC: Must be "In Stock" AND have stock > 0
                     if (statusVal === "In Stock" && stockVal > 0) {
                         stockText.textContent = `In Stock: ${stockVal} units available`;
                         stockText.className = "text-success small fw-bold";
@@ -306,7 +332,6 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                         addToCartBtn.style.background = "#198754";
                         addToCartBtn.textContent = "Add To Cart";
                     } else {
-                        // Triggers if admin set status to OOS even if stock is 100
                         stockText.textContent = "Currently Out of Stock";
                         stockText.className = "text-danger small fw-bold";
                         addToCartBtn.disabled = true;
@@ -318,19 +343,21 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                 }
             });
 
-            closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+            if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
             window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 
-            // --- 4. Quantity Buttons ---
-            document.getElementById("qty-minus").onclick = () => {
+            // --- 6. QUANTITY BUTTONS ---
+            const qMinus = document.getElementById("qty-minus");
+            const qPlus = document.getElementById("qty-plus");
+
+            if (qMinus) qMinus.onclick = () => {
                 if (currentQty > 1) { currentQty--; qtyEl.textContent = currentQty; }
             };
 
-            document.getElementById("qty-plus").onclick = () => {
+            if (qPlus) qPlus.onclick = () => {
                 const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                 const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
                 
-                // Block quantity increase if status is OOS
                 if (statusVal === "In Stock" && currentQty < maxStock) { 
                     currentQty++; 
                     qtyEl.textContent = currentQty; 
@@ -341,20 +368,8 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                 }
             };
 
-            function handlePublicImageError(imgElement, iconId) {
-            const icon = document.getElementById(iconId);
-            
-            // Completely hide the broken img tag
-            imgElement.classList.add('d-none');
-            
-            // Reveal the professional placeholder icon
-            if (icon) {
-                icon.classList.remove('d-none');
-            }
-        }
-
-            // --- 5. Cart Storage Logic ---
-            addToCartBtn.onclick = () => {
+            // --- 7. CART STORAGE LOGIC ---
+            if (addToCartBtn) addToCartBtn.onclick = () => {
                 if (!currentProductId) return;
                 const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                 let cart = JSON.parse(localStorage.getItem("farmCart")) || [];
@@ -375,14 +390,7 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                 setTimeout(() => { window.location.href = "/orders"; }, 600);
             };
 
-           
-
-            // --- 7. Scroll Behavior ---
-            const scrollTopBtn = document.getElementById("scrollTopBtn");
-            window.onscroll = () => { scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
-            scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
-            // --- 6. LIVE SEARCH FILTERING ---
+            // --- 8. LIVE SEARCH FILTERING ---
             const searchInput = document.getElementById('liveSearchInput');
             const productItems = document.querySelectorAll('.produce-item');
             const noResultsMsg = document.getElementById('noResults');
@@ -393,71 +401,76 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                     let hasVisibleItems = false;
 
                     productItems.forEach(item => {
-                        // 1. Find the product name inside the card
                         const productName = item.querySelector('h5').textContent.toLowerCase();
-                        
-                        // 2. Check if the name contains the search term
                         if (productName.includes(term)) {
-                            item.classList.remove('d-none'); // Show it
+                            item.classList.remove('d-none');
                             hasVisibleItems = true;
                         } else {
-                            item.classList.add('d-none'); // Hide it
+                            item.classList.add('d-none');
                         }
                     });
 
-                    // 3. Show/Hide "No Results" message
-                    if (hasVisibleItems) {
-                        noResultsMsg.classList.add('d-none');
-                        noResultsMsg.classList.remove('d-block');
-                    } else {
-                        noResultsMsg.classList.remove('d-none');
-                        noResultsMsg.classList.add('d-block');
+                    if (noResultsMsg) {
+                        if (hasVisibleItems) {
+                            noResultsMsg.classList.add('d-none');
+                            noResultsMsg.classList.remove('d-block');
+                        } else {
+                            noResultsMsg.classList.remove('d-none');
+                            noResultsMsg.classList.add('d-block');
+                        }
                     }
                 });
             }
 
-            // Load recommendations if user is logged in
+            // --- 9. INITIALIZE RECOMMENDATIONS ---
             {% if session.get('user_id') %}
-            loadRecommendations();
+                loadRecommendations();
             {% endif %}
+
+            // Scroll Behavior
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            window.onscroll = () => { if(scrollTopBtn) scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
+            if(scrollTopBtn) scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
         });
 
-        // Recommendations loading function
+        // --- 10. UPDATED RECOMMENDATION LOADER (SLIDER COMPATIBLE) ---
         function loadRecommendations() {
             const loadingEl = document.getElementById('recommendations-loading');
             const gridEl = document.getElementById('recommendations-grid');
+            const sliderContainer = document.getElementById('slider-container');
             const emptyEl = document.getElementById('recommendations-empty');
             const errorEl = document.getElementById('recommendations-error');
 
-            if (!loadingEl) return; // Exit if section doesn't exist
+            if (!loadingEl) return;
 
             fetch('/api/recommendations')
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch recommendations');
-                    }
+                    if (!response.ok) throw new Error('Failed to fetch recommendations');
                     return response.json();
                 })
                 .then(data => {
                     loadingEl.style.display = 'none';
                     
                     if (data.recommendations && data.recommendations.length > 0) {
-                        gridEl.style.display = 'grid';
-                        emptyEl.style.display = 'none';
-                        errorEl.style.display = 'none';
+                        // Show slider container and set grid to flex
+                        if (sliderContainer) sliderContainer.style.display = 'block';
+                        gridEl.style.display = 'flex'; 
+                        
+                        if (emptyEl) emptyEl.style.display = 'none';
+                        if (errorEl) errorEl.style.display = 'none';
                         
                         gridEl.innerHTML = data.recommendations.map(rec => `
                             <div class="recommendation-card">
                                 <div class="recommendation-image-container">
                                     <img src="${rec.image_file && rec.image_file.startsWith('http') ? rec.image_file : '/static/image/' + (rec.image_file || 'default_product.jpg')}" 
-                                         alt="${rec.product_name}"
-                                         onerror="this.src='/static/image/default_product.jpg'">
+                                        alt="${rec.product_name}"
+                                        onerror="this.src='/static/image/default_product.jpg'">
                                 </div>
                                 <div class="recommendation-card-body">
                                     <h5 class="recommendation-card-title">${rec.product_name}</h5>
                                     <div class="recommendation-price">$${rec.price.toFixed(2)}</div>
-                                    <p class="recommendation-reason">${rec.reason}</p>
                                     <span class="recommendation-confidence ${rec.confidence}">${rec.confidence}</span>
+                                    <p class="recommendation-reason">${rec.reason}</p>
                                     <a href="/product" class="recommendation-btn">
                                         View Product
                                     </a>
@@ -465,17 +478,16 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                             </div>
                         `).join('');
                     } else {
-                        emptyEl.style.display = 'block';
+                        if (emptyEl) emptyEl.style.display = 'block';
                         gridEl.style.display = 'none';
-                        errorEl.style.display = 'none';
+                        if (sliderContainer) sliderContainer.style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Error loading recommendations:', error);
                     loadingEl.style.display = 'none';
-                    errorEl.style.display = 'block';
+                    if (errorEl) errorEl.style.display = 'block';
                     gridEl.style.display = 'none';
-                    emptyEl.style.display = 'none';
                 });
         }
     </script>

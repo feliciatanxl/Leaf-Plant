@@ -83,24 +83,38 @@
                     <div id="my-profile" class="user-section active">
                         <h1 class="display-6 text-primary-green fw-bold mb-4">👋 Welcome, {{ user.name }}!</h1>
                         
-                        <!-- Recommendations Section -->
-                        <div class="recommendations-section mb-5">
-                            <h2>🌱 Recommended for You</h2>
-                            <div id="recommendations-loading" class="recommendations-loading">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                            <div id="recommendations-grid" class="recommendations-grid" style="display: none;"></div>
-                            <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
-                                <i class="bi bi-inbox"></i>
-                                <p>No recommendations available at this time.</p>
-                            </div>
-                            <div id="recommendations-error" class="recommendations-error" style="display: none;">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                <p>Unable to load recommendations. Please try again later.</p>
+                        <div class="recommendations-section mb-5" id="recommendations-section">
+                        <h2>🌱 Recommended for You</h2>
+                        
+                        <div id="recommendations-loading" class="recommendations-loading">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
+
+                        <div id="slider-container" style="display: none; position: relative; padding: 0 20px;">
+                            
+                            <button class="slider-btn prev-btn" onclick="scrollSlider(-1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+
+                            <div id="recommendations-grid" class="recommendations-grid">
+                                </div>
+
+                            <button class="slider-btn next-btn" onclick="scrollSlider(1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
+                            <i class="bi bi-inbox"></i>
+                            <p>No recommendations available at this time.</p>
+                        </div>
+                        <div id="recommendations-error" class="recommendations-error" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <p>Unable to load recommendations. Please try again later.</p>
+                        </div>
+                    </div>
 
                         <h4 class="mb-3">Personal Information</h4>
 
@@ -991,62 +1005,73 @@
         loadRecommendations();
     });
 
-    // Recommendations loading function
+    window.scrollSlider = function(direction) {
+        const container = document.getElementById('recommendations-grid');
+        const scrollAmount = 300; // How many pixels to scroll per click
+        
+        if (container) {
+            if (direction === 1) {
+                container.scrollLeft += scrollAmount;
+            } else {
+                container.scrollLeft -= scrollAmount;
+            }
+        }
+    };
+
+    // --- 2. Recommendation Loader ---
     function loadRecommendations() {
         const loadingEl = document.getElementById('recommendations-loading');
         const gridEl = document.getElementById('recommendations-grid');
+        const sliderContainer = document.getElementById('slider-container');
         const emptyEl = document.getElementById('recommendations-empty');
         const errorEl = document.getElementById('recommendations-error');
 
-        if (!loadingEl) return; // Exit if section doesn't exist
+        if (!gridEl) return;
 
         fetch('/api/recommendations')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch recommendations');
-                }
+                if (!response.ok) throw new Error('Failed to fetch');
                 return response.json();
             })
             .then(data => {
-                loadingEl.style.display = 'none';
+                if (loadingEl) loadingEl.style.display = 'none';
                 
                 if (data.recommendations && data.recommendations.length > 0) {
-                    gridEl.style.display = 'grid';
-                    emptyEl.style.display = 'none';
-                    errorEl.style.display = 'none';
+                    // Show the wrapper and set grid to flex for horizontal scrolling
+                    if (sliderContainer) sliderContainer.style.display = 'block';
+                    gridEl.style.display = 'flex'; 
                     
                     gridEl.innerHTML = data.recommendations.map(rec => `
                         <div class="recommendation-card">
                             <div class="recommendation-image-container">
                                 <img src="${rec.image_file && rec.image_file.startsWith('http') ? rec.image_file : '/static/image/' + (rec.image_file || 'default_product.jpg')}" 
-                                     alt="${rec.product_name}"
                                      onerror="this.src='/static/image/default_product.jpg'">
                             </div>
                             <div class="recommendation-card-body">
                                 <h5 class="recommendation-card-title">${rec.product_name}</h5>
                                 <div class="recommendation-price">$${rec.price.toFixed(2)}</div>
-                                <p class="recommendation-reason">${rec.reason}</p>
                                 <span class="recommendation-confidence ${rec.confidence}">${rec.confidence}</span>
-                                <a href="/product" class="recommendation-btn">
-                                    View Product
-                                </a>
+                                <p class="recommendation-reason">${rec.reason}</p>
+                                <a href="/product" class="recommendation-btn">View Product</a>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    emptyEl.style.display = 'block';
-                    gridEl.style.display = 'none';
-                    errorEl.style.display = 'none';
+                    if (emptyEl) emptyEl.style.display = 'block';
+                    if (sliderContainer) sliderContainer.style.display = 'none';
                 }
             })
             .catch(error => {
-                console.error('Error loading recommendations:', error);
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                gridEl.style.display = 'none';
-                emptyEl.style.display = 'none';
+                console.error('Slider Error:', error);
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (errorEl) errorEl.style.display = 'block';
             });
     }
+
+    // --- 3. Initialize on Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRecommendations();
+    });
 </script>
 </body>
 </html>
