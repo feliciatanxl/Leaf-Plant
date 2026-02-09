@@ -32,6 +32,7 @@ from account.route import auth, create_admin
 from myaccount.route import myaccount_bp
 from products.product_route import product_bp
 from orders.routes import orders_bp
+from recommendations.routes import recommendations_bp
 
 # Load environment variables
 load_dotenv()
@@ -74,6 +75,7 @@ def create_app():
     app.register_blueprint(myaccount_bp)
     app.register_blueprint(product_bp)
     app.register_blueprint(orders_bp, url_prefix='/orders')
+    app.register_blueprint(recommendations_bp, url_prefix='/api')
 
     # ==============================================================================
     # GLOBAL PUBLIC ROUTES

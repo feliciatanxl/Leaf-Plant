@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='product.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='recommendations.css') }}">
 </head>
 
 <body>
@@ -101,6 +102,27 @@
                 </div>
 
                 <div class="col-md-9">
+                    {% if session.get('user_id') %}
+                    <!-- Recommendations Section -->
+                    <div class="recommendations-section mb-5">
+                        <h2>🌱 Recommended for You</h2>
+                        <div id="recommendations-loading" class="recommendations-loading">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="recommendations-grid" class="recommendations-grid" style="display: none;"></div>
+                        <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
+                            <i class="bi bi-inbox"></i>
+                            <p>No recommendations available at this time.</p>
+                        </div>
+                        <div id="recommendations-error" class="recommendations-error" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <p>Unable to load recommendations. Please try again later.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="row g-4" id="productGrid">
                         {% for product in products %}
                         <div class="col-md-4 produce-item" data-category="{{ product.category|lower }}">
@@ -393,7 +415,69 @@ descEl.innerHTML = `<li>${productDesc}</li>`;
                     }
                 });
             }
+
+            // Load recommendations if user is logged in
+            {% if session.get('user_id') %}
+            loadRecommendations();
+            {% endif %}
         });
+
+        // Recommendations loading function
+        function loadRecommendations() {
+            const loadingEl = document.getElementById('recommendations-loading');
+            const gridEl = document.getElementById('recommendations-grid');
+            const emptyEl = document.getElementById('recommendations-empty');
+            const errorEl = document.getElementById('recommendations-error');
+
+            if (!loadingEl) return; // Exit if section doesn't exist
+
+            fetch('/api/recommendations')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch recommendations');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    
+                    if (data.recommendations && data.recommendations.length > 0) {
+                        gridEl.style.display = 'grid';
+                        emptyEl.style.display = 'none';
+                        errorEl.style.display = 'none';
+                        
+                        gridEl.innerHTML = data.recommendations.map(rec => `
+                            <div class="recommendation-card">
+                                <div class="recommendation-image-container">
+                                    <img src="${rec.image_file && rec.image_file.startsWith('http') ? rec.image_file : '/static/image/' + (rec.image_file || 'default_product.jpg')}" 
+                                         alt="${rec.product_name}"
+                                         onerror="this.src='/static/image/default_product.jpg'">
+                                </div>
+                                <div class="recommendation-card-body">
+                                    <h5 class="recommendation-card-title">${rec.product_name}</h5>
+                                    <div class="recommendation-price">$${rec.price.toFixed(2)}</div>
+                                    <p class="recommendation-reason">${rec.reason}</p>
+                                    <span class="recommendation-confidence ${rec.confidence}">${rec.confidence}</span>
+                                    <a href="/product" class="recommendation-btn">
+                                        View Product
+                                    </a>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        emptyEl.style.display = 'block';
+                        gridEl.style.display = 'none';
+                        errorEl.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading recommendations:', error);
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                    gridEl.style.display = 'none';
+                    emptyEl.style.display = 'none';
+                });
+        }
     </script>
     <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="stockToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
