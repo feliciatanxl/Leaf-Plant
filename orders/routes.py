@@ -66,14 +66,19 @@ def create_checkout_session():
         if not user_id:
             return jsonify({'error': 'User not logged in'}), 401
 
-        # 1. Prepare Line Items
+        # 1. Prepare Line Items & Calculate Total
         line_items = []
+        cart_total_amount = 0.0  # <--- Initialize total counter
+
         for item in cart_items:
             product = Product.query.get(item['id'])
             if not product:
                 print(f"⚠️ Product ID {item['id']} not found. Skipping.")
                 continue
             
+            # <--- Add to running total
+            cart_total_amount += (float(product.price) * item['qty'])
+
             line_items.append({
                 'price_data': {
                     'currency': 'sgd',
@@ -96,6 +101,24 @@ def create_checkout_session():
         if selected_voucher_id:
             voucher = Voucher.query.filter_by(id=selected_voucher_id, customer_id=user_id, is_used=False).first()
             if voucher:
+                # --- Minimum Spend Rules ---
+                min_spend_required = 0.0
+                
+                if voucher.discount_amount == 5:
+                    min_spend_required = 20.00  # $5 Off needs $20 spend
+                elif voucher.discount_amount == 10:
+                    min_spend_required = 50.00  # $10 Off needs $50 spend
+                elif voucher.discount_amount == 20:
+                    min_spend_required = 100.00 # $20 Off needs $100 spend
+
+                # --- The Check ---
+                # Check if total is LESS than required (allows exact match)
+                if cart_total_amount < min_spend_required:
+                    return jsonify({
+                        'error': f"The ${int(voucher.discount_amount)} voucher requires a minimum spend of ${min_spend_required:.2f}. (Current: ${cart_total_amount:.2f})"
+                    }), 400
+                
+                # If passed, apply the coupon
                 applied_discounts.append({'coupon': voucher.stripe_coupon_id})
                 metadata_voucher_id = str(voucher.id)
 
@@ -104,7 +127,7 @@ def create_checkout_session():
             if promo:
                 applied_discounts.append({'coupon': promo.stripe_coupon_id})
 
-        # 3. Create Session (Single, Clean Definition)
+        # 3. Create Session
         customer = Customer.query.get(user_id)
         
         session_params = {
@@ -112,17 +135,13 @@ def create_checkout_session():
             'line_items': line_items,
             'mode': 'payment',
             'client_reference_id': str(user_id),
-            
-            # ✅ CRITICAL: Enable Email Invoicing
             'customer_email': customer.email if customer.email else None,
-            'invoice_creation': { 'enabled': True },
-
+            'invoice_creation': {'enabled': True},
             'metadata': {
                 'user_id': str(user_id),
                 'voucher_id': metadata_voucher_id,
                 'source': 'website'
             },
-            # ✅ UPDATED: Include session_id for the success page receipt
             'success_url': 'http://127.0.0.1:5001/orders/success?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url': 'http://127.0.0.1:5001/orders',
         }

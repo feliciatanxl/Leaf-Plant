@@ -402,8 +402,7 @@
     document.addEventListener('DOMContentLoaded', fetchLiveStock);
 
     const stripe = Stripe("{{ pub_key }}"); 
-
-    function startCheckout() {
+function startCheckout() {
         const cartData = JSON.parse(localStorage.getItem('farmCart')) || [];
         if (cartData.length === 0) return;
 
@@ -416,21 +415,65 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 cart: cartData,
-                promoCode: appliedPromoCode,
-                voucherId: selectedVoucherId // 👈 Send the Voucher ID!
+                promoCode: typeof appliedPromoCode !== 'undefined' ? appliedPromoCode : '', // Safe check
+                voucherId: typeof selectedVoucherId !== 'undefined' ? selectedVoucherId : null // Safe check
             }),
         })
         .then(res => res.json())
         .then(data => {
             if (data.error) {
-                alert(data.error);
+                // 1. Inject the error message from Python into the modal
+                const errorText = document.getElementById('voucherErrorMessage');
+                if (errorText) errorText.innerText = data.error;
+
+                // 2. Actually SHOW the modal
+                const errorModal = new bootstrap.Modal(document.getElementById('voucherErrorModal'));
+                errorModal.show();
+
+                // 3. Reset the button so they can try again
                 btn.disabled = false;
                 btn.innerText = "Proceed to Payment";
             } else {
+                // Success! Go to Stripe
                 return stripe.redirectToCheckout({ sessionId: data.id });
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerText = "Proceed to Payment";
+            alert("Network error. Please try again."); // Fallback for network crashes
         });
     }
 </script>
+<div class="modal fade" id="voucherErrorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header bg-danger text-white border-bottom-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>Unable to Apply Voucher
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-cart-x text-danger-emphasis display-1"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Requirement Not Met</h5>
+                
+                <p class="text-muted" id="voucherErrorMessage" style="font-size: 1.1rem;">
+                    Loading error...
+                </p>
+            </div>
+
+            <div class="modal-footer border-top-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    Okay, I'll add more items
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
