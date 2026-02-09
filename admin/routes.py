@@ -737,6 +737,15 @@ def analytics_api():
     now = datetime.now(sgt_zone)
     today = now.date()
     
+    demand_query = db.session.query(
+        StockAlert.product_name,
+        func.count(StockAlert.id)
+    ).filter(StockAlert.is_notified == False)\
+     .group_by(StockAlert.product_name)\
+     .order_by(func.count(StockAlert.id).desc()).all()
+     
+    demand_data = [{'name': item[0], 'count': item[1]} for item in demand_query]
+    
     # 2. DETERMINE START DATE BASED ON PERIOD
     if period == 'today':
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -813,5 +822,6 @@ def analytics_api():
 
     return jsonify({
         "sales": {"labels": sales_labels, "data": sales_data},
-        "top_products": {"labels": top_labels, "data": top_data}
+        "top_products": {"labels": top_labels, "data": top_data},
+        "demand": demand_data
     })

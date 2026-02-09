@@ -468,6 +468,37 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm p-4 rounded-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold text-dark m-0">
+                                        <i class="bi bi-eye-fill me-2 text-primary"></i>Stock Alert Demand
+                                    </h5>
+                                    <small class="text-muted">Customers waiting for out-of-stock items</small>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light text-uppercase small text-muted">
+                                            <tr>
+                                                <th class="ps-3">Product Name</th>
+                                                <th class="text-end pe-3">Waiting Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="analyticsDemandTable">
+                                            <tr>
+                                                <td colspan="2" class="text-center py-4 text-muted">
+                                                    <span class="spinner-border spinner-border-sm me-2"></span>Loading demand data...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
                     <div id="customer-service" class="user-section">
@@ -1874,57 +1905,88 @@ setInterval(refreshDashboardData, 3000);
     // 4. Analytics & Charts Logic (CLEANED)
     // ==========================================
     let salesChartInstance = null;
-let topSellingChartInstance = null;
+    let topSellingChartInstance = null;
 
-function initCharts() {
-    const ctxSales = document.getElementById('salesChart')?.getContext('2d');
-    const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
-    
-    // 1. GET SELECTED TIME PERIOD
-    const timeFilter = document.getElementById('analyticsTimeFilter').value; 
+    function initCharts() {
+        const ctxSales = document.getElementById('salesChart')?.getContext('2d');
+        const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
+        
+        // 1. GET SELECTED TIME PERIOD
+        const timeFilter = document.getElementById('analyticsTimeFilter').value; 
 
-    if (!ctxSales || !ctxTop) return;
+        // Safety check
+        if (!ctxSales || !ctxTop) return;
 
-    // 2. SEND IT TO PYTHON (e.g. /api/analytics?period=month)
-    fetch(`/admin/api/analytics?period=${timeFilter}`)
-        .then(response => response.json())
-        .then(data => {
-            
-            // 3. UPDATE SALES CHART
-            if (salesChartInstance) salesChartInstance.destroy();
-            salesChartInstance = new Chart(ctxSales, {
-                type: 'line',
-                data: {
-                    labels: data.sales.labels, 
-                    datasets: [{
-                        label: 'Revenue ($)',
-                        data: data.sales.data, 
-                        borderColor: '#198754',
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+        // 2. SEND REQUEST TO PYTHON
+        fetch(`/admin/api/analytics?period=${timeFilter}`)
+            .then(response => response.json())
+            .then(data => {
+                
+                // --- A. UPDATE SALES CHART ---
+                if (salesChartInstance) salesChartInstance.destroy();
+                salesChartInstance = new Chart(ctxSales, {
+                    type: 'line',
+                    data: {
+                        labels: data.sales.labels, 
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: data.sales.data, 
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
 
-            // 4. UPDATE TOP PRODUCTS CHART
-            if (topSellingChartInstance) topSellingChartInstance.destroy();
-            topSellingChartInstance = new Chart(ctxTop, {
-                type: 'doughnut',
-                data: {
-                    labels: data.top_products.labels,
-                    datasets: [{
-                        data: data.top_products.data,
-                        backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        })
-        .catch(err => console.error("Error loading charts:", err));
-}
+                // --- B. UPDATE TOP PRODUCTS CHART ---
+                if (topSellingChartInstance) topSellingChartInstance.destroy();
+                topSellingChartInstance = new Chart(ctxTop, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.top_products.labels,
+                        datasets: [{
+                            data: data.top_products.data,
+                            backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // --- C. UPDATE DEMAND WATCHLIST TABLE (New) ---
+                const demandTable = document.getElementById('analyticsDemandTable');
+                if (demandTable) {
+                    demandTable.innerHTML = ''; // Clear "Loading..." message
+                    
+                    if (data.demand && data.demand.length > 0) {
+                        data.demand.forEach(item => {
+                            demandTable.innerHTML += `
+                                <tr>
+                                    <td class="ps-3 fw-bold text-dark">${item.name}</td>
+                                    <td class="text-end pe-3">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
+                                            <i class="bi bi-person-fill me-1"></i> ${item.count} waiting
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        demandTable.innerHTML = `
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                                    No active stock alerts.
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }
+            })
+            .catch(err => console.error("Error loading analytics:", err));
+    }
 
     // ==========================================
     // 5. Initial Load & AI Features
