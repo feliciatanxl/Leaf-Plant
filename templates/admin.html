@@ -390,6 +390,108 @@
                         </div>
                     </div>
 
+                    <div id="analytics" class="user-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h1 class="display-6 text-primary-green fw-bold">Business Analytics</h1>
+                            <p class="text-muted">Real-time data insights and performance metrics.</p>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm shadow-sm" onclick="window.print()">
+                            <i class="bi bi-download me-2"></i>Download Report
+                        </button>
+                    </div>
+
+                    <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
+                        <div class="row align-items-end g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">TIME PERIOD</label>
+                                <select id="analyticsTimeFilter" class="form-select bg-light border-0" onchange="initCharts()"> 
+                                    <option value="today">📅 Today</option>
+                                    <option value="week" selected>📅 Last 7 Days</option>
+                                    <option value="month">📅 This Month</option>
+                                    <option value="year">📅 This Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8 text-end">
+                                <small class="text-muted">Data auto-refreshes every 30 seconds.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm p-3 bg-success text-white rounded-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center h-100">
+                                    <div>
+                                        <small class="text-white-50 text-uppercase fw-bold">Total Sales (MTD)</small>
+                                        <h3 class="mb-0 fw-bold" id="totalSalesAmount">$0.00</h3>
+                                    </div>
+                                    <i class="bi bi-currency-dollar fs-1 opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm p-3 bg-primary text-white rounded-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center h-100">
+                                    <div>
+                                        <small class="text-white-50 text-uppercase fw-bold">Website Visits</small>
+                                        <h3 class="mb-0 fw-bold" id="totalVisits">0</h3>
+                                    </div>
+                                    <i class="bi bi-people fs-1 opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm p-3 bg-warning text-dark rounded-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center h-100">
+                                    <div>
+                                        <small class="text-dark-50 text-uppercase fw-bold">Active Coupons</small>
+                                        <h3 class="mb-0 fw-bold" id="activeCoupons">12</h3>
+                                    </div>
+                                    <i class="bi bi-ticket-perforated fs-1 opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold text-dark m-0">Total Sales Trend</h5>
+                                    <span class="badge bg-light text-muted border">Revenue</span>
+                                </div>
+                                <div style="height: 300px;">
+                                    <canvas id="salesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold text-dark m-0">Top Products</h5>
+                                    <span class="badge bg-light text-muted border">Volume</span>
+                                </div>
+                                <div style="height: 300px;">
+                                    <canvas id="topSellingChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm p-4 rounded-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold text-dark m-0">Website Traffic Flow</h5>
+                                    <span class="badge bg-light text-muted border">Hourly Unique Visits</span>
+                                </div>
+                                <div style="height: 250px;">
+                                    <canvas id="trafficChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     <div id="customer-service" class="user-section">
                         <div class="inquiry-header mb-4">
                             <div>
@@ -1301,9 +1403,6 @@
                             </div>
                         </div>
                     </div>
-                    <div id="analytics" class="user-section">
-                        <h1>Analytics</h1>
-                    </div>
                     <div id="settings" class="user-section">
                         <h1 class="display-6 text-primary-green fw-bold mb-4 text-start">Admin System Settings</h1>
 
@@ -1448,428 +1547,467 @@
         <p class="footer-copy">Copyright © 2025 WEB DEVELOPMENT PROJECT TEAM AI.</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // ==========================================
-        // 1. Validation & Utility Logic
-        // ==========================================
-        function validateStockStatus(input) {
-            let stock = input.value;
-            if (stock <= 0) { console.log("Status: Out of Stock"); }
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ==========================================
+    // 1. Validation & Utility Logic
+    // ==========================================
+    function validateStockStatus(input) {
+        let stock = input.value;
+        if (stock <= 0) { console.log("Status: Out of Stock"); }
+    }
 
-        function previewImage(input, previewId, iconId) {
-            const preview = document.getElementById(previewId);
-            const icon = document.getElementById(iconId);
-            if (!preview || !icon) return;
-            if (input.value && input.value.trim() !== "") {
-                preview.src = "/static/image/" + input.value;
-                preview.onload = function () {
-                    preview.classList.remove('d-none');
-                    icon.classList.add('d-none');
-                };
-                preview.onerror = function () {
-                    preview.classList.add('d-none');
-                    icon.classList.remove('d-none');
-                    icon.className = "bi bi-file-earmark-x text-danger fs-4";
-                };
-            } else {
+    function previewImage(input, previewId, iconId) {
+        const preview = document.getElementById(previewId);
+        const icon = document.getElementById(iconId);
+        if (!preview || !icon) return;
+        if (input.value && input.value.trim() !== "") {
+            preview.src = "/static/image/" + input.value;
+            preview.onload = function () {
+                preview.classList.remove('d-none');
+                icon.classList.add('d-none');
+            };
+            preview.onerror = function () {
                 preview.classList.add('d-none');
                 icon.classList.remove('d-none');
-                icon.className = "bi bi-image text-muted fs-4";
-            }
-        }
-
-        function handleTableImageError(imgElement, iconId) {
-            const icon = document.getElementById(iconId);
-            imgElement.classList.add('d-none');
-            if (icon) {
-                icon.classList.remove('d-none');
                 icon.className = "bi bi-file-earmark-x text-danger fs-4";
+            };
+        } else {
+            preview.classList.add('d-none');
+            icon.classList.remove('d-none');
+            icon.className = "bi bi-image text-muted fs-4";
+        }
+    }
+
+    function handleTableImageError(imgElement, iconId) {
+        const icon = document.getElementById(iconId);
+        imgElement.classList.add('d-none');
+        if (icon) {
+            icon.classList.remove('d-none');
+            icon.className = "bi bi-file-earmark-x text-danger fs-4";
+        }
+    }
+
+    function previewImageFile(input, previewId, iconId) {
+        const preview = document.getElementById(previewId);
+        const icon = document.getElementById(iconId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                icon.classList.add('d-none');
             }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('d-none');
+            icon.classList.remove('d-none');
+        }
+    }
+
+    // ==========================================
+    // 2. Navigation & Dashboard Logic (UPDATED)
+    // ==========================================
+    function showAdminSection(event, sectionId) {
+        if (event) event.preventDefault();
+        
+        // Hide all sections
+        document.querySelectorAll('.user-section, .admin-section').forEach(section => {
+            section.style.display = 'none';
+            section.classList.remove('active');
+        });
+
+        // Show target section
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.style.display = 'block';
+            target.classList.add('active');
         }
 
-        // ==========================================
-        // 2. Navigation & Dashboard Logic
-        // ==========================================
-        function showAdminSection(event, sectionId) {
-            if (event) event.preventDefault();
-            document.querySelectorAll('.user-section, .admin-section').forEach(section => {
-                section.style.display = 'none';
-                section.classList.remove('active');
-            });
-            const target = document.getElementById(sectionId);
-            if (target) {
-                target.style.display = 'block';
-                target.classList.add('active');
-            }
-            document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); });
-            if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
-            history.pushState(null, null, '#' + sectionId);
-            window.scrollTo(0, 0);
-            return false;
+        // Update Sidebar styling
+        document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); });
+        if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
+        
+        history.pushState(null, null, '#' + sectionId);
+        window.scrollTo(0, 0);
+
+        // 👇 NEW: Initialize Charts if Analytics is selected
+        if (sectionId === 'analytics') {
+            setTimeout(initCharts, 100);
         }
 
-        function updateAccountLinkState() {
-            const accountLink = document.getElementById('accountLink');
-            const userRole = localStorage.getItem('userRole');
-            if (accountLink) {
-                if (userRole === 'admin') {
-                    accountLink.textContent = 'Admin Panel';
-                    accountLink.href = '/admin/dashboard';
-                    accountLink.classList.add('active');
-                } else {
-                    accountLink.textContent = 'Account';
-                    accountLink.href = '/account';
+        return false;
+    }
+
+    function updateAccountLinkState() {
+        const accountLink = document.getElementById('accountLink');
+        const userRole = localStorage.getItem('userRole');
+        if (accountLink) {
+            if (userRole === 'admin') {
+                accountLink.textContent = 'Admin Panel';
+                accountLink.href = '/admin/dashboard';
+                accountLink.classList.add('active');
+            } else {
+                accountLink.textContent = 'Account';
+                accountLink.href = '/account';
+            }
+        }
+    }
+
+    function refreshDashboardData() {
+        // Only run if dashboard is visible to save resources
+        if (!document.getElementById('dashboard') || document.getElementById('dashboard').style.display === 'none') return;
+
+        fetch('/admin/api/products')
+            .then(response => response.json())
+            .then(data => {
+                if (data.stats) {
+                    const syncDisplay = document.getElementById('sync-display');
+                    if (syncDisplay) syncDisplay.innerText = data.stats.sync_time;
+                    document.getElementById('live-alert-count').innerText = data.stats.active_alerts_count;
+                    document.getElementById('live-total-orders').innerText = data.stats.total_orders_count;
+                    document.getElementById('live-total-sales').innerText = data.stats.total_sales_value;
+                    document.getElementById('live-total-profit').innerText = data.stats.total_profit_value;
+                    document.getElementById('live-total-commissions').innerText = data.stats.total_commissions;
                 }
-            }
-        }
-
-        function refreshDashboardData() {
-            fetch('/admin/api/products')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.stats) {
-                        const syncDisplay = document.getElementById('sync-display');
-                        if (syncDisplay) syncDisplay.innerText = data.stats.sync_time;
-                        document.getElementById('live-alert-count').innerText = data.stats.active_alerts_count;
-                        document.getElementById('live-total-orders').innerText = data.stats.total_orders_count;
-                        document.getElementById('live-total-sales').innerText = data.stats.total_sales_value;
-                        document.getElementById('live-total-profit').innerText = data.stats.total_profit_value;
-                        document.getElementById('live-total-commissions').innerText = data.stats.total_commissions;
+                (data.products || []).forEach(p => {
+                    const qtyCell = document.getElementById(`qty-${p.id}`);
+                    if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
+                    const badge = document.getElementById(`status-${p.id}`);
+                    if (badge) {
+                        badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
+                        badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
                     }
-                    (data.products || []).forEach(p => {
-                        const qtyCell = document.getElementById(`qty-${p.id}`);
-                        if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
-                        const badge = document.getElementById(`status-${p.id}`);
-                        if (badge) {
-                            badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
-                            badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
-                        }
-                    });
-                }).catch(err => console.log("Sync paused:", err));
-        }
-        setInterval(refreshDashboardData, 3000);
-
-        // ==========================================
-        // 3. Marketing Campaign Logic (SMART SYNC ENGINE)
-        // ==========================================
-
-        let currentDiscount = 0;
-
-        function handleCampaignChange() {
-            const type = document.getElementById('campaignType').value;
-            const productWrapper = document.getElementById('targetProductWrapper');
-            const customWrapper = document.getElementById('customGoalWrapper');
-
-            if (type === 'all') { productWrapper.classList.add('d-none'); }
-            else { productWrapper.classList.remove('d-none'); }
-
-            if (type === 'custom') { customWrapper.classList.remove('d-none'); }
-            else { customWrapper.classList.add('d-none'); }
-        }
-
-        // A. Analyze (Drafting Step)
-        function analyzeAudience() {
-            const cType = document.getElementById('campaignType').value;
-            const pIdSelect = document.getElementById('campaignProduct');
-            const customInput = document.getElementById('customGoalInput').value;
-            const btn = document.getElementById('analyzeBtn');
-            const messageArea = document.getElementById('uiMessage');
-
-            let pId = (cType === 'all') ? 'all' : pIdSelect.value;
-
-            if (cType !== 'custom' && cType !== 'all' && (!pId || pId === '')) {
-                alert("Please select a target product!"); return;
-            }
-            if (cType === 'custom' && !customInput.trim()) {
-                alert("Please type your custom goal!"); return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI is writing...';
-            document.getElementById('campaignDraft').classList.remove('d-none');
-
-            const existingAlert = document.querySelector('.promo-success-alert');
-            if (existingAlert) existingAlert.remove();
-
-            messageArea.value = "Consulting ChatGPT...";
-
-            fetch('/admin/campaign/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: pId, campaign_type: cType, custom_goal: customInput })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.error) throw new Error(data.error);
-                    window.targetProductId = pId;
-
-                    let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
-                    document.getElementById('uiTriggers').innerText = audienceLabel;
-
-                    const statusLabel = document.getElementById('draftStatus');
-
-                    if (data.promo_code && data.promo_code !== "null") {
-                        currentDiscount = data.discount_percent || 0;
-                        const alertHtml = `
-                    <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mt-3 promo-success-alert" role="alert">
-                        <i class="bi bi-magic me-2 fs-4"></i>
-                        <div>
-                            <strong>Active Code:</strong> 
-                            <span id="liveCodeBadge" class="badge bg-white text-success border border-success fs-6 mx-1">${data.promo_code}</span>
-                            <br>
-                            <small>Edit the code in the text box below to update this.</small>
-                        </div>
-                    </div>`;
-                        messageArea.insertAdjacentHTML('beforebegin', alertHtml);
-                        statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
-                    } else {
-                        currentDiscount = 0;
-                        statusLabel.innerText = "AI Generated (No Code)";
-                    }
-
-                    let finalMessage = data.message;
-                    if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
-                        finalMessage += `\n\nUse promo code: ${data.promo_code}`;
-                    }
-
-                    messageArea.value = finalMessage;
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
-                })
-                .catch(error => {
-                    console.error(error);
-                    btn.disabled = false;
-                    btn.innerHTML = 'Try Again';
-                    alert("Error generating draft: " + error.message);
                 });
+            }).catch(err => console.log("Sync paused:", err));
+    }
+    setInterval(refreshDashboardData, 3000);
+
+    // ==========================================
+    // 3. Marketing Campaign Logic
+    // ==========================================
+    let currentDiscount = 0;
+
+    function handleCampaignChange() {
+        const type = document.getElementById('campaignType').value;
+        const productWrapper = document.getElementById('targetProductWrapper');
+        const customWrapper = document.getElementById('customGoalWrapper');
+
+        if (type === 'all') { productWrapper.classList.add('d-none'); }
+        else { productWrapper.classList.remove('d-none'); }
+
+        if (type === 'custom') { customWrapper.classList.remove('d-none'); }
+        else { customWrapper.classList.add('d-none'); }
+    }
+
+    function analyzeAudience() {
+        const cType = document.getElementById('campaignType').value;
+        const pIdSelect = document.getElementById('campaignProduct');
+        const customInput = document.getElementById('customGoalInput').value;
+        const btn = document.getElementById('analyzeBtn');
+        const messageArea = document.getElementById('uiMessage');
+
+        let pId = (cType === 'all') ? 'all' : pIdSelect.value;
+
+        if (cType !== 'custom' && cType !== 'all' && (!pId || pId === '')) {
+            alert("Please select a target product!"); return;
+        }
+        if (cType === 'custom' && !customInput.trim()) {
+            alert("Please type your custom goal!"); return;
         }
 
-        // =========================================================
-        // 👇 FIXED LIVE TEXT LISTENER (Context Aware) 👇
-        // =========================================================
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI is writing...';
+        document.getElementById('campaignDraft').classList.remove('d-none');
+
+        const existingAlert = document.querySelector('.promo-success-alert');
+        if (existingAlert) existingAlert.remove();
+
+        messageArea.value = "Consulting ChatGPT...";
+
+        fetch('/admin/campaign/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: pId, campaign_type: cType, custom_goal: customInput })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                window.targetProductId = pId;
+
+                let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
+                document.getElementById('uiTriggers').innerText = audienceLabel;
+
+                const statusLabel = document.getElementById('draftStatus');
+
+                if (data.promo_code && data.promo_code !== "null") {
+                    currentDiscount = data.discount_percent || 0;
+                    const alertHtml = `
+                <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mt-3 promo-success-alert" role="alert">
+                    <i class="bi bi-magic me-2 fs-4"></i>
+                    <div>
+                        <strong>Active Code:</strong> 
+                        <span id="liveCodeBadge" class="badge bg-white text-success border border-success fs-6 mx-1">${data.promo_code}</span>
+                        <br>
+                        <small>Edit the code in the text box below to update this.</small>
+                    </div>
+                </div>`;
+                    messageArea.insertAdjacentHTML('beforebegin', alertHtml);
+                    statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
+                } else {
+                    currentDiscount = 0;
+                    statusLabel.innerText = "AI Generated (No Code)";
+                }
+
+                let finalMessage = data.message;
+                if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
+                    finalMessage += `\n\nUse promo code: ${data.promo_code}`;
+                }
+
+                messageArea.value = finalMessage;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
+            })
+            .catch(error => {
+                console.error(error);
+                btn.disabled = false;
+                btn.innerHTML = 'Try Again';
+                alert("Error generating draft: " + error.message);
+            });
+    }
+
+    // Live Text Listener
+    if (document.getElementById('uiMessage')) {
         document.getElementById('uiMessage').addEventListener('input', function (e) {
             const text = e.target.value;
             const badge = document.getElementById('liveCodeBadge');
             let bestCode = "";
 
             if (badge) {
-                // Strategy 1: Look for "code [SOMETHING]" or "promo [SOMETHING]"
-                // This is the most accurate way to find what the user is typing.
                 const contextMatch = text.match(/(?:use\s+code|promo\s+code|code)\s+([a-zA-Z0-9]+)/i);
-
                 if (contextMatch && contextMatch[1]) {
-                    // If found "code XYZ", use XYZ immediately
                     bestCode = contextMatch[1];
                 } else {
-                    // Strategy 2: Fallback - Find words with numbers (e.g. leaf20, save50)
-                    // Filter out common words like "community" or "home" by checking for digits OR all-caps
                     const potentialCodes = text.match(/\b[a-zA-Z0-9]{3,}\b/g) || [];
-
                     const likelyCodes = potentialCodes.filter(word => {
                         const hasNumber = /\d/.test(word);
                         const isAllCaps = /^[A-Z0-9]+$/.test(word);
                         return hasNumber || isAllCaps;
                     });
-
                     if (likelyCodes.length > 0) {
-                        bestCode = likelyCodes[likelyCodes.length - 1]; // Pick the last one found
+                        bestCode = likelyCodes[likelyCodes.length - 1];
                     }
                 }
 
-                // Only update if we found a good candidate
                 if (bestCode) {
-                    badge.innerText = bestCode; // Show EXACTLY what user typed (Case sensitive)
-
-                    // --- DISCOUNT SYNC LOGIC ---
-                    // Check if the code has a number at the end (e.g. 20 from yourmother20)
+                    badge.innerText = bestCode;
                     const discountMatch = bestCode.match(/(\d+)$/);
-
                     if (discountMatch) {
                         const extractedNum = parseInt(discountMatch[1]);
-
                         if (extractedNum > 0 && extractedNum <= 100) {
-
-                            // If discount CHANGED (e.g. from 20 to 50)
                             if (currentDiscount > 0 && currentDiscount !== extractedNum) {
-
                                 const oldPercentString = currentDiscount + "%";
                                 const newPercentString = extractedNum + "%";
-
-                                // If the text contains the OLD percentage, replace it with NEW percentage
                                 if (text.includes(oldPercentString)) {
                                     const start = e.target.selectionStart;
                                     const end = e.target.selectionEnd;
-
                                     const newText = text.replace(oldPercentString, newPercentString);
-                                    e.target.value = newText; // Update text box
-
-                                    e.target.setSelectionRange(start, end); // Keep cursor position
+                                    e.target.value = newText;
+                                    e.target.setSelectionRange(start, end);
                                 }
                             }
-                            // Update global variable for Stripe creation
                             currentDiscount = extractedNum;
                         }
                     }
                 }
             }
         });
+    }
 
-        // C. Launch Logic
-        function launchCampaign() {
-            const confirmModal = new bootstrap.Modal(document.getElementById('campaignConfirmModal'));
-            confirmModal.show();
-        }
+    function launchCampaign() {
+        const confirmModal = new bootstrap.Modal(document.getElementById('campaignConfirmModal'));
+        confirmModal.show();
+    }
 
-        function executeFinalCampaignSend() {
-            const launchBtn = document.getElementById('launchBtn');
-            const finalMessage = document.getElementById('uiMessage').value;
-            const confirmModalInstance = bootstrap.Modal.getInstance(document.getElementById('campaignConfirmModal'));
-            confirmModalInstance.hide();
+    function executeFinalCampaignSend() {
+        const launchBtn = document.getElementById('launchBtn');
+        const finalMessage = document.getElementById('uiMessage').value;
+        const confirmModalInstance = bootstrap.Modal.getInstance(document.getElementById('campaignConfirmModal'));
+        confirmModalInstance.hide();
 
-            // Use the code currently displayed in the green box
-            let finalCode = null;
-            const badge = document.getElementById('liveCodeBadge');
-            if (badge) {
-                finalCode = badge.innerText.trim();
-            }
+        let finalCode = null;
+        const badge = document.getElementById('liveCodeBadge');
+        if (badge) { finalCode = badge.innerText.trim(); }
 
-            launchBtn.disabled = true;
-            launchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+        launchBtn.disabled = true;
+        launchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
 
-            fetch('/admin/campaign/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    product_id: window.targetProductId,
-                    message: finalMessage,
-                    promo_code: finalCode, // Sends whatever is in the green box
-                    discount_percent: currentDiscount // Sends the synced percentage
-                })
+        fetch('/admin/campaign/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                product_id: window.targetProductId,
+                message: finalMessage,
+                promo_code: finalCode,
+                discount_percent: currentDiscount
             })
-                .then(res => res.json())
-                .then(data => {
-                    const count = (data.sent_count !== undefined) ? data.sent_count : 0;
-                    document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
-                    new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
-                    launchBtn.disabled = false;
-                    launchBtn.innerHTML = 'Launch Campaign';
-                })
-                .catch(err => {
-                    alert("Send failed.");
-                    launchBtn.disabled = false;
-                });
-        }
+        })
+            .then(res => res.json())
+            .then(data => {
+                const count = (data.sent_count !== undefined) ? data.sent_count : 0;
+                document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
+                new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
+                launchBtn.disabled = false;
+                launchBtn.innerHTML = 'Launch Campaign';
+            })
+            .catch(err => {
+                alert("Send failed.");
+                launchBtn.disabled = false;
+            });
+    }
 
-        // ==========================================
-        // 4. Initial Load Setup
-        // ==========================================
-        window.addEventListener('DOMContentLoaded', function () {
-            updateAccountLinkState();
-            handleCampaignChange();
+    // ==========================================
+    // 4. Analytics & Charts Logic (NEW)
+    // ==========================================
+    let salesChartInstance = null;
+    let topSellingChartInstance = null;
+    let trafficChartInstance = null;
 
-            const deleteUserModal = document.getElementById('deleteUserModal');
-            if (deleteUserModal) {
-                deleteUserModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget;
-                    document.getElementById('deleteUserName').textContent = button.getAttribute('data-username');
-                    document.getElementById('confirmDeleteForm').setAttribute('action', button.getAttribute('data-url'));
-                });
-            }
+    function initCharts() {
+        const ctxSales = document.getElementById('salesChart')?.getContext('2d');
+        const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
+        const ctxTraffic = document.getElementById('trafficChart')?.getContext('2d');
 
-            let activeId = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get('tab') || 'dashboard';
-            const targetSection = document.getElementById(activeId.split('&')[0]);
-            if (targetSection) {
-                document.querySelectorAll('.user-section, .admin-section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
-                targetSection.style.display = 'block';
-                targetSection.classList.add('active');
-                document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
-                    if (link.getAttribute('onclick')?.includes(`'${activeId}'`)) link.classList.add('active');
-                    else link.classList.remove('active');
-                });
-            }
+        // Prevent errors if elements don't exist (e.g. user hasn't added HTML yet)
+        if (!ctxSales || !ctxTop || !ctxTraffic) return;
+
+        // 1. Sales Chart
+        if (salesChartInstance) salesChartInstance.destroy();
+        salesChartInstance = new Chart(ctxSales, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: [150, 230, 180, 320, 450, 500, 480],
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
         });
 
-        function updateLiveClock() {
-            const now = new Date();
-            const options = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Singapore' };
-            if (document.getElementById('live-clock')) document.getElementById('live-clock').innerText = now.toLocaleString('en-GB', options);
+        // 2. Top Products Chart
+        if (topSellingChartInstance) topSellingChartInstance.destroy();
+        topSellingChartInstance = new Chart(ctxTop, {
+            type: 'doughnut',
+            data: {
+                labels: ['Kale', 'Lettuce', 'Tomatoes', 'Carrots', 'Spinach'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 3. Traffic Chart
+        if (trafficChartInstance) trafficChartInstance.destroy();
+        trafficChartInstance = new Chart(ctxTraffic, {
+            type: 'bar',
+            data: {
+                labels: ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'],
+                datasets: [{
+                    label: 'Visitors',
+                    data: [12, 45, 67, 50, 40, 85, 120, 60],
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 5
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // ==========================================
+    // 5. Initial Load & AI Features
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', function () {
+        updateAccountLinkState();
+        handleCampaignChange();
+
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                document.getElementById('deleteUserName').textContent = button.getAttribute('data-username');
+                document.getElementById('confirmDeleteForm').setAttribute('action', button.getAttribute('data-url'));
+            });
         }
-        setInterval(updateLiveClock, 1000);
 
-        //AI Description
-        function generateAIDescription(btn) {
-            // 1. Find the parent modal to scope our search
-            const modal = btn.closest('.modal-content');
+        let activeId = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get('tab') || 'dashboard';
+        const targetSection = document.getElementById(activeId.split('&')[0]);
+        if (targetSection) {
+            showAdminSection(null, activeId.split('&')[0]);
+        }
+    });
 
-            // 2. Get inputs specifically from THIS modal instance
-            const nameInput = modal.querySelector('input[name="name"]');
-            const categorySelect = modal.querySelector('select[name="category"]');
-            const descriptionTextarea = modal.querySelector('textarea[name="description"]');
-            const loader = modal.querySelector('.ai-loader'); // Use class to find the loader in this modal
+    function updateLiveClock() {
+        const now = new Date();
+        const options = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Singapore' };
+        if (document.getElementById('live-clock')) document.getElementById('live-clock').innerText = now.toLocaleString('en-GB', options);
+    }
+    setInterval(updateLiveClock, 1000);
 
-            const productName = nameInput.value;
-            const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+    function generateAIDescription(btn) {
+        const modal = btn.closest('.modal-content');
+        const nameInput = modal.querySelector('input[name="name"]');
+        const categorySelect = modal.querySelector('select[name="category"]');
+        const descriptionTextarea = modal.querySelector('textarea[name="description"]');
+        const loader = modal.querySelector('.ai-loader');
 
-            if (!productName || categorySelect.value === "") {
-                alert("Please ensure Product Name and Category are filled so the AI knows what to write about.");
-                return;
-            }
+        const productName = nameInput.value;
+        const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
 
-            // UI Feedback: Disable button and show loader
-            btn.disabled = true;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
-            if (loader) loader.classList.remove('d-none');
+        if (!productName || categorySelect.value === "") {
+            alert("Please ensure Product Name and Category are filled so the AI knows what to write about.");
+            return;
+        }
 
-            fetch('/admin/generate-description', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: productName,
-                    category: categoryName
-                })
+        btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+        if (loader) loader.classList.remove('d-none');
+
+        fetch('/admin/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: productName,
+                category: categoryName
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.description) {
-                        descriptionTextarea.value = data.description;
-                    } else {
-                        alert("AI Error: " + (data.error || "Could not generate text"));
-                    }
-                })
-                .catch(err => {
-                    console.error("Fetch Error:", err);
-                    alert("Failed to connect to the AI service.");
-                })
-                .finally(() => {
-                    // Reset UI
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    if (loader) loader.classList.add('d-none');
-                });
-        }
-        function previewImageFile(input, previewId, iconId) {
-            const preview = document.getElementById(previewId);
-            const icon = document.getElementById(iconId);
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                    preview.classList.remove('d-none');
-                    icon.classList.add('d-none');
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.description) {
+                    descriptionTextarea.value = data.description;
+                } else {
+                    alert("AI Error: " + (data.error || "Could not generate text"));
                 }
-
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                preview.classList.add('d-none');
-                icon.classList.remove('d-none');
-            }
-        }
-    </script>
+            })
+            .catch(err => {
+                console.error("Fetch Error:", err);
+                alert("Failed to connect to the AI service.");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if (loader) loader.classList.add('d-none');
+            });
+    }
+</script>
 </body>
-
 </html>
