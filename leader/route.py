@@ -7,26 +7,48 @@ leader_bp = Blueprint('leader', __name__)
 
 @leader_bp.route('/leader/dashboard')
 def dashboard():
+    # 1. Security Checks
     if 'user_id' not in session or session.get('user_role') != 'leader':
         return redirect(url_for('auth.login'))
     
     leader = GroupLeader.query.first()
     if not leader: return "Leader profile not found", 404
 
+    # 2. Get Data
     orders = WhatsAppOrder.query.filter_by(leader_id=leader.id).order_by(WhatsAppOrder.timestamp.desc()).all()
     neighbors = Customer.query.filter_by(leader_id=leader.id).all()
     leads = WhatsAppLead.query.filter_by(status='Awaiting Assignment').order_by(WhatsAppLead.created_at.desc()).all()
 
-    total_sales = sum(o.total_price for o in orders if o.order_status in ['Confirmed', 'Paid', 'Delivered', 'Received'])
-    pending_commission = total_sales * 0.111
+    # 3. Define "Real Money" Statuses
+    valid_statuses = ['Confirmed', 'Paid', 'Delivered', 'Received']
+
+    # 4. Calculate Values
+    # Revenue = Total money the farm collected
+    farm_revenue = sum(o.total_price for o in orders if o.order_status in valid_statuses)
+
+    # Earnings = Sum of the 'commission_earned' column from your database
+    # (This fixes the 0.111 math issue and uses the exact saved value)
+    my_earnings = sum(o.commission_earned for o in orders if o.order_status in valid_statuses)
     
+    # 5. Calculate Counts
     today = datetime.now(pytz.timezone('Asia/Singapore')).date()
     today_count = sum(1 for o in orders if o.timestamp and o.timestamp.date() == today)
     active_count = sum(1 for o in orders if o.order_status in ['Paid', 'Confirmed', 'Packing', 'Out for Delivery'])
 
-    return render_template('leader.html', leader=leader, orders=orders, neighbors=neighbors, leads=leads, 
-                           new_leads_count=len(leads), total_sales=total_sales, 
-                           pending_commission=pending_commission, today_orders_count=today_count, 
+    # 6. Return to HTML
+    return render_template('leader.html', 
+                           leader=leader, 
+                           orders=orders, 
+                           neighbors=neighbors, 
+                           leads=leads, 
+                           new_leads_count=len(leads), 
+                           
+                           # 👇 TRICK: We pass 'my_earnings' to the 'total_sales' slot.
+                           # This makes the dashboard display YOUR COMMISSION as the main number.
+                           total_sales=my_earnings, 
+                           
+                           pending_commission=my_earnings, 
+                           today_orders_count=today_count, 
                            active_orders_count=active_count)
 
 @leader_bp.route('/leader/api/update-status', methods=['POST'])

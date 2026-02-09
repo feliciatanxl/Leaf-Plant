@@ -9,9 +9,12 @@ from dotenv import load_dotenv
 from sqlalchemy import event
 from firebase_admin import credentials, storage, initialize_app
 
+# This gets the folder that main.py is actually sitting in
 basedir = os.path.abspath(os.path.dirname(__file__))
+# This creates the full path: C:\Users\charb\...\serviceAccountKey.json
 cert_path = os.path.join(basedir, 'serviceAccountKey.json')
 
+# Now use that path to initialize
 cred = credentials.Certificate(cert_path)
 initialize_app(cred, {
     'storageBucket': 'wdp-ws-ai-2025.firebasestorage.app'
@@ -122,9 +125,14 @@ def create_app():
     
     @app.route('/myaccount')
     def myaccount():
+        # 1. Check if the user is logged in
         if 'user_id' not in session:
             return redirect(url_for('account')) 
+
+        # 2. Fetch the user data from the Customer table
         current_user = Customer.query.get(session['user_id'])
+
+        # 3. Pass the 'current_user' data to the HTML as 'user'
         return render_template('myaccount.html', user=current_user) 
 
     # ==============================================================================
@@ -132,6 +140,7 @@ def create_app():
     # ==============================================================================
     @app.route('/leader')
     def leader():
+        # 1. Security Checks
         if 'user_id' not in session:
             abort(401)
 
@@ -143,26 +152,44 @@ def create_app():
         if not leader_data:
             abort(500)
 
+        # 2. Get Data
         orders = WhatsAppOrder.query.filter_by(leader_id=leader_data.id).all()
         neighbors = Customer.query.filter_by(leader_id=leader_data.id).all()
-        
         pending_leads = WhatsAppLead.query.filter(WhatsAppLead.neighborhood.ilike(f"%{leader_data.area}%")).all()
 
-        total_sales = sum(o.total_price for o in orders if o.order_status == 'Confirmed')
-        pending_commission = total_sales * 0.111
+        # 3. Calculate Earnings (FIX IS HERE 👇)
+        # We use the same list of valid statuses as your main dashboard
+        valid_statuses = ['Confirmed', 'Paid', 'Delivered', 'Received']
         
+        # Calculate Total Sales
+        total_sales = sum(o.total_price for o in orders if o.order_status in valid_statuses)
+        
+        # Calculate YOUR Commission (Earnings)
+        # This sums the exact commission stored in the database
+        total_earnings = sum(o.commission_earned for o in orders if o.order_status in valid_statuses)
+        
+        # 4. Counts
         sgt = pytz.timezone('Asia/Singapore')
         today = datetime.now(sgt).date()
         today_orders_count = sum(1 for o in orders if o.timestamp.date() == today)
+        
+        # Calculate active orders for the dashboard if needed
+        active_orders_count = sum(1 for o in orders if o.order_status in ['Paid', 'Confirmed', 'Packing', 'Out for Delivery'])
 
         return render_template('leader.html', 
                                 leader=leader_data,
                                 orders=orders,
                                 neighbors=neighbors,
                                 pending_leads=pending_leads,
+                                
+                                # 👇 IMPORTANT: Pass the missing variable!
+                                total_earnings=total_earnings, 
+                                
                                 total_sales=total_sales,
-                                pending_commission=pending_commission,
-                                today_orders_count=today_orders_count)
+                                pending_commission=total_earnings, # Keep this consistent
+                                today_orders_count=today_orders_count,
+                                active_orders_count=active_orders_count,
+                                new_leads_count=len(pending_leads))
             
     @app.errorhandler(404)
     def page_not_found(e):
