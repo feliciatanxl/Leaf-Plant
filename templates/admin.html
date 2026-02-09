@@ -396,9 +396,9 @@
                             <h1 class="display-6 text-primary-green fw-bold">Business Analytics</h1>
                             <p class="text-muted">Real-time data insights and performance metrics.</p>
                         </div>
-                        <button class="btn btn-outline-success btn-sm shadow-sm" onclick="window.print()">
+                        <!-- <button class="btn btn-outline-success btn-sm shadow-sm" onclick="window.print()">
                             <i class="bi bi-download me-2"></i>Download Report
-                        </button>
+                        </button> -->
                     </div>
 
                     <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
@@ -419,7 +419,7 @@
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="card border-0 shadow-sm p-3 bg-success text-white rounded-4 h-100">
                                 <div class="d-flex justify-content-between align-items-center h-100">
                                     <div>
@@ -430,18 +430,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card border-0 shadow-sm p-3 bg-primary text-white rounded-4 h-100">
-                                <div class="d-flex justify-content-between align-items-center h-100">
-                                    <div>
-                                        <small class="text-white-50 text-uppercase fw-bold">Website Visits</small>
-                                        <h3 class="mb-0 fw-bold" id="totalVisits">0</h3>
-                                    </div>
-                                    <i class="bi bi-people fs-1 opacity-25"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        
+                        <div class="col-md-6">
                             <div class="card border-0 shadow-sm p-3 bg-warning text-dark rounded-4 h-100">
                                 <div class="d-flex justify-content-between align-items-center h-100">
                                     <div>
@@ -475,18 +465,6 @@
                                 </div>
                                 <div style="height: 300px;">
                                     <canvas id="topSellingChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm p-4 rounded-4">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold text-dark m-0">Website Traffic Flow</h5>
-                                    <span class="badge bg-light text-muted border">Hourly Unique Visits</span>
-                                </div>
-                                <div style="height: 250px;">
-                                    <canvas id="trafficChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -1656,33 +1634,58 @@
     }
 
     function refreshDashboardData() {
-        // Only run if dashboard is visible to save resources
-        if (!document.getElementById('dashboard') || document.getElementById('dashboard').style.display === 'none') return;
+    // Check if either tab is active. If neither is visible, we can skip to save resources.
+    const dashboardTab = document.getElementById('dashboard');
+    const analyticsTab = document.getElementById('analytics');
+    
+    const isDashboardVisible = dashboardTab && dashboardTab.style.display !== 'none';
+    const isAnalyticsVisible = analyticsTab && analyticsTab.style.display !== 'none';
 
-        fetch('/admin/api/products')
-            .then(response => response.json())
-            .then(data => {
-                if (data.stats) {
+    if (!isDashboardVisible && !isAnalyticsVisible) return;
+
+    fetch('/admin/api/products')
+        .then(response => response.json())
+        .then(data => {
+            if (data.stats) {
+                // --- Update DASHBOARD Tab Elements ---
+                if (isDashboardVisible) {
                     const syncDisplay = document.getElementById('sync-display');
                     if (syncDisplay) syncDisplay.innerText = data.stats.sync_time;
-                    document.getElementById('live-alert-count').innerText = data.stats.active_alerts_count;
-                    document.getElementById('live-total-orders').innerText = data.stats.total_orders_count;
-                    document.getElementById('live-total-sales').innerText = data.stats.total_sales_value;
-                    document.getElementById('live-total-profit').innerText = data.stats.total_profit_value;
-                    document.getElementById('live-total-commissions').innerText = data.stats.total_commissions;
+                    if(document.getElementById('live-alert-count')) 
+                        document.getElementById('live-alert-count').innerText = data.stats.active_alerts_count;
+                    if(document.getElementById('live-total-orders')) 
+                        document.getElementById('live-total-orders').innerText = data.stats.total_orders_count;
+                    if(document.getElementById('live-total-sales')) 
+                        document.getElementById('live-total-sales').innerText = data.stats.total_sales_value;
+                    if(document.getElementById('live-total-profit')) 
+                        document.getElementById('live-total-profit').innerText = data.stats.total_profit_value;
+                    if(document.getElementById('live-total-commissions')) 
+                        document.getElementById('live-total-commissions').innerText = data.stats.total_commissions;
                 }
-                (data.products || []).forEach(p => {
-                    const qtyCell = document.getElementById(`qty-${p.id}`);
-                    if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
-                    const badge = document.getElementById(`status-${p.id}`);
-                    if (badge) {
-                        badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
-                        badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
-                    }
-                });
-            }).catch(err => console.log("Sync paused:", err));
-    }
-    setInterval(refreshDashboardData, 3000);
+
+                // --- Update ANALYTICS Tab Elements ---
+                // We check if the elements exist before trying to update them
+                const analyticsSales = document.getElementById('totalSalesAmount');
+                if (analyticsSales) analyticsSales.innerText = '$' + data.stats.total_sales_value;
+
+                const analyticsCoupons = document.getElementById('activeCoupons');
+                if (analyticsCoupons) analyticsCoupons.innerText = data.stats.active_coupons_count;
+            }
+
+            // --- Update Product Table (Always update if products tab exists in DOM) ---
+            (data.products || []).forEach(p => {
+                const qtyCell = document.getElementById(`qty-${p.id}`);
+                if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
+                
+                const badge = document.getElementById(`status-${p.id}`);
+                if (badge) {
+                    badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
+                    badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
+                }
+            });
+        }).catch(err => console.log("Sync paused:", err));
+}
+setInterval(refreshDashboardData, 3000);
 
     // ==========================================
     // 3. Marketing Campaign Logic
@@ -1868,69 +1871,60 @@
     }
 
     // ==========================================
-    // 4. Analytics & Charts Logic (NEW)
+    // 4. Analytics & Charts Logic (CLEANED)
     // ==========================================
     let salesChartInstance = null;
-    let topSellingChartInstance = null;
-    let trafficChartInstance = null;
+let topSellingChartInstance = null;
 
-    function initCharts() {
-        const ctxSales = document.getElementById('salesChart')?.getContext('2d');
-        const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
-        const ctxTraffic = document.getElementById('trafficChart')?.getContext('2d');
+function initCharts() {
+    const ctxSales = document.getElementById('salesChart')?.getContext('2d');
+    const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
+    
+    // 1. GET SELECTED TIME PERIOD
+    const timeFilter = document.getElementById('analyticsTimeFilter').value; 
 
-        // Prevent errors if elements don't exist (e.g. user hasn't added HTML yet)
-        if (!ctxSales || !ctxTop || !ctxTraffic) return;
+    if (!ctxSales || !ctxTop) return;
 
-        // 1. Sales Chart
-        if (salesChartInstance) salesChartInstance.destroy();
-        salesChartInstance = new Chart(ctxSales, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Revenue ($)',
-                    data: [150, 230, 180, 320, 450, 500, 480],
-                    borderColor: '#198754',
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+    // 2. SEND IT TO PYTHON (e.g. /api/analytics?period=month)
+    fetch(`/admin/api/analytics?period=${timeFilter}`)
+        .then(response => response.json())
+        .then(data => {
+            
+            // 3. UPDATE SALES CHART
+            if (salesChartInstance) salesChartInstance.destroy();
+            salesChartInstance = new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: data.sales.labels, 
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: data.sales.data, 
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
 
-        // 2. Top Products Chart
-        if (topSellingChartInstance) topSellingChartInstance.destroy();
-        topSellingChartInstance = new Chart(ctxTop, {
-            type: 'doughnut',
-            data: {
-                labels: ['Kale', 'Lettuce', 'Tomatoes', 'Carrots', 'Spinach'],
-                datasets: [{
-                    data: [35, 25, 20, 15, 5],
-                    backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        // 3. Traffic Chart
-        if (trafficChartInstance) trafficChartInstance.destroy();
-        trafficChartInstance = new Chart(ctxTraffic, {
-            type: 'bar',
-            data: {
-                labels: ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'],
-                datasets: [{
-                    label: 'Visitors',
-                    data: [12, 45, 67, 50, 40, 85, 120, 60],
-                    backgroundColor: '#0d6efd',
-                    borderRadius: 5
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
+            // 4. UPDATE TOP PRODUCTS CHART
+            if (topSellingChartInstance) topSellingChartInstance.destroy();
+            topSellingChartInstance = new Chart(ctxTop, {
+                type: 'doughnut',
+                data: {
+                    labels: data.top_products.labels,
+                    datasets: [{
+                        data: data.top_products.data,
+                        backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        })
+        .catch(err => console.error("Error loading charts:", err));
+}
 
     // ==========================================
     // 5. Initial Load & AI Features

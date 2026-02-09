@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 from models import db, ContactInquiry, Product, Category, StockAlert, Customer, WhatsAppOrder, GroupLeader, PromoCode
 from sqlalchemy import func
 from sqlalchemy.orm.attributes import flag_modified
-from datetime import datetime
+from datetime import datetime, timedelta
 from firebase_admin import storage
 import calendar
 import pytz
@@ -114,6 +114,7 @@ def get_products_api():
     total_commissions = db.session.query(func.sum(WhatsAppOrder.commission_earned)).scalar() or 0.0
     admin_count = Customer.query.filter_by(role='admin').count()
     user_count = Customer.query.filter_by(role='user').count()
+    active_coupons_count = PromoCode.query.filter_by(is_active=True).count()
     total_profit_value = total_sales_value * 0.30
     sgt = pytz.timezone('Asia/Singapore')
     sync_time = datetime.now(sgt).strftime("%d %b, %H:%M:%S")
@@ -128,6 +129,7 @@ def get_products_api():
             "total_profit_value": f"{total_profit_value:,.2f}",
             "admin_count": admin_count,
             "user_count": user_count,
+            "active_coupons_count": active_coupons_count,
             "sync_time": sync_time
         }
     })
@@ -722,3 +724,94 @@ def delete_inquiry(id):
     db.session.delete(inquiry)
     db.session.commit()
     return redirect(url_for('admin.dashboard') + '?refresh=true&tab=customer-service')
+
+# =========================================================
+#  📊 ANALYTICS API (Connects DB to Dashboard Charts)
+# =========================================================
+@admin_bp.route('/api/analytics')
+def analytics_api():
+    # 1. GET TIME PERIOD FROM FRONTEND (Default to 'week')
+    period = request.args.get('period', 'week')
+    
+    sgt_zone = pytz.timezone('Asia/Singapore')
+    now = datetime.now(sgt_zone)
+    today = now.date()
+    
+    # 2. DETERMINE START DATE BASED ON PERIOD
+    if period == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif period == 'month':
+        start_date = now - timedelta(days=30)
+    elif period == 'year':
+        start_date = now - timedelta(days=365)
+    else: # Default 'week'
+        start_date = now - timedelta(days=6)
+
+    # 3. TOP SELLING PRODUCTS (Filtered by Time)
+    top_products_query = db.session.query(
+        WhatsAppOrder.product_name, 
+        func.sum(WhatsAppOrder.quantity)
+    ).filter(WhatsAppOrder.timestamp >= start_date)\
+     .group_by(WhatsAppOrder.product_name)\
+     .order_by(func.sum(WhatsAppOrder.quantity).desc()).limit(5).all()
+
+    if top_products_query:
+        top_labels = [p[0] for p in top_products_query]
+        top_data = [p[1] for p in top_products_query]
+    else:
+        top_labels = ["No Sales"]
+        top_data = [1]
+
+    # 4. TOTAL SALES TREND (Dynamic Axis)
+    sales_labels = []
+    sales_data = []
+
+    if period == 'today':
+        # HOURLY LOOP (00:00 to 23:00)
+        for i in range(8, 23): # Show business hours 8am-10pm
+            hour_str = f"{i:02}"
+            label = f"{i}:00"
+            
+            # Sum sales for this specific hour today
+            hourly_sum = db.session.query(func.sum(WhatsAppOrder.total_price)).filter(
+                func.date(WhatsAppOrder.timestamp) == today,
+                func.strftime('%H', WhatsAppOrder.timestamp) == hour_str
+            ).scalar()
+            
+            sales_labels.append(label)
+            sales_data.append(float(hourly_sum) if hourly_sum else 0)
+
+    elif period == 'year':
+        # MONTHLY LOOP (Last 12 Months)
+        for i in range(11, -1, -1): # Count backwards 11 months
+            month_date = now - timedelta(days=i*30) 
+            month_str = month_date.strftime('%m-%Y') # e.g. 02-2025
+            label = month_date.strftime('%b') # Jan, Feb
+            
+            monthly_sum = db.session.query(func.sum(WhatsAppOrder.total_price)).filter(
+                func.strftime('%m-%Y', WhatsAppOrder.timestamp) == month_str
+            ).scalar()
+            
+            sales_labels.append(label)
+            sales_data.append(float(monthly_sum) if monthly_sum else 0)
+
+    else:
+        # DAILY LOOP (For Week & Month)
+        days_range = 30 if period == 'month' else 7
+        start_loop = today - timedelta(days=days_range - 1)
+        
+        for i in range(days_range):
+            day = start_loop + timedelta(days=i)
+            day_str = day.strftime('%d %b') if period == 'month' else day.strftime('%a')
+            
+            daily_sum = db.session.query(func.sum(WhatsAppOrder.total_price)).filter(
+                func.date(WhatsAppOrder.timestamp) == day
+            ).scalar()
+            
+            sales_labels.append(day_str)
+            sales_data.append(float(daily_sum) if daily_sum else 0)
+
+    return jsonify({
+        "sales": {"labels": sales_labels, "data": sales_data},
+        "top_products": {"labels": top_labels, "data": top_data}
+    })
