@@ -53,7 +53,7 @@ def validate_promo():
     
     return jsonify({"valid": False, "message": "Invalid or inactive code."}), 400
 
-# --- 3. CHECKOUT SESSION ---
+# --- 3. CHECKOUT SESSION (CLEANED & FIXED) ---
 @orders_bp.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
@@ -66,12 +66,12 @@ def create_checkout_session():
         if not user_id:
             return jsonify({'error': 'User not logged in'}), 401
 
+        # 1. Prepare Line Items
         line_items = []
         for item in cart_items:
-            # Safety: Ensure we actually found the product in our DB
             product = Product.query.get(item['id'])
             if not product:
-                print(f"⚠️ Product ID {item['id']} not found in database. Skipping.")
+                print(f"⚠️ Product ID {item['id']} not found. Skipping.")
                 continue
             
             line_items.append({
@@ -79,7 +79,6 @@ def create_checkout_session():
                     'currency': 'sgd',
                     'product_data': {
                         'name': product.name, 
-                        # STRIPE REQUIREMENT: Metadata values MUST be strings
                         'metadata': {'product_id': str(product.id)} 
                     },
                     'unit_amount': int(product.price * 100),
@@ -90,12 +89,11 @@ def create_checkout_session():
         if not line_items:
             return jsonify({'error': 'Your cart is empty or products are invalid'}), 400
 
-        # --- DISCOUNT LOGIC ---
+        # 2. Handle Discounts
         applied_discounts = []
         metadata_voucher_id = ""
 
         if selected_voucher_id:
-            # Ensure voucher belongs to user and is unused
             voucher = Voucher.query.filter_by(id=selected_voucher_id, customer_id=user_id, is_used=False).first()
             if voucher:
                 applied_discounts.append({'coupon': voucher.stripe_coupon_id})
@@ -106,18 +104,26 @@ def create_checkout_session():
             if promo:
                 applied_discounts.append({'coupon': promo.stripe_coupon_id})
 
-        # --- SESSION PARAMS ---
+        # 3. Create Session (Single, Clean Definition)
+        customer = Customer.query.get(user_id)
+        
         session_params = {
             'payment_method_types': ['card'],
             'line_items': line_items,
             'mode': 'payment',
             'client_reference_id': str(user_id),
+            
+            # ✅ CRITICAL: Enable Email Invoicing
+            'customer_email': customer.email if customer.email else None,
+            'invoice_creation': { 'enabled': True },
+
             'metadata': {
                 'user_id': str(user_id),
                 'voucher_id': metadata_voucher_id,
-                'source': 'website' # This tells the webhook it's a web order
+                'source': 'website'
             },
-            'success_url': 'http://127.0.0.1:5001/orders/success',
+            # ✅ UPDATED: Include session_id for the success page receipt
+            'success_url': 'http://127.0.0.1:5001/orders/success?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url': 'http://127.0.0.1:5001/orders',
         }
 
@@ -130,7 +136,6 @@ def create_checkout_session():
         return jsonify({'id': checkout_session.id})
 
     except Exception as e:
-        # This print statement is your best friend. Check your terminal!
         print(f"❌ Stripe Session Error: {str(e)}")
         return jsonify(error=str(e)), 403
 
@@ -147,10 +152,8 @@ def stripe_webhook():
 
     if event['type'] == 'checkout.session.completed':
         session_data = event['data']['object']
-        # Import inside the block to avoid circular dependencies
         from models import db, Customer, Voucher, LoyaltyPoints 
         
-        # 1. FETCH FULL SESSION (Crucial for WhatsApp/Mobile Promo Codes)
         full_session = stripe.checkout.Session.retrieve(
             session_data['id'],
             expand=['total_details.breakdown.discounts']
@@ -169,42 +172,39 @@ def stripe_webhook():
             
             if customer:
                 # --- VOUCHER REMOVAL LOGIC ---
-                # A. Handle Website Vouchers (via direct ID in metadata)
                 if voucher_id_str and voucher_id_str.strip():
                     v = Voucher.query.filter_by(id=int(voucher_id_str), customer_id=customer.id).first()
                     if v: 
                         v.is_used = True
                         print(f"✅ Website Voucher {v.code} marked as used.")
 
-                # B. Handle WhatsApp/Mobile Vouchers (via Promo Code string detection)
                 discounts = full_session.get('total_details', {}).get('breakdown', {}).get('discounts', [])
                 for d in discounts:
                     promo_id = d.get('discount', {}).get('promotion_code')
                     if promo_id:
-                        # Convert Stripe Promo ID to your RW- string code
                         promo_obj = stripe.PromotionCode.retrieve(promo_id)
                         applied_code = promo_obj.code
-                        
                         v_auto = Voucher.query.filter_by(
-                            code=applied_code, 
-                            customer_id=customer.id, 
-                            is_used=False
+                            code=applied_code, customer_id=customer.id, is_used=False
                         ).first()
-                        
                         if v_auto:
                             v_auto.is_used = True
                             print(f"✅ WhatsApp/Mobile Voucher {applied_code} marked as used.")
 
-                # 1. SAVE ORDER & STOCK
+                # 1. SAVE ORDER & STOCK (Returns summary + invoice_url)
+                # We need to capture the invoice URL here if we want to pass it to WhatsApp
+                # But handle_successful_order saves it to DB. We can grab it from session_data directly.
+                invoice_pdf_url = None
+                if session_data.get('invoice'):
+                    invoice_obj = stripe.Invoice.retrieve(session_data['invoice'])
+                    invoice_pdf_url = invoice_obj.invoice_pdf
+
                 items_summary = handle_successful_order(session_data)
 
-                # 2. AWARD POINTS (Based on actual paid amount)
+                # 2. AWARD POINTS
                 total_paid = session_data.get('amount_total', 0) / 100
-                
-                # Check tier safely
                 tier = customer.loyalty.tier if customer.loyalty else 'Seedling'
                 multiplier = 1.5 if tier == 'Harvest' else 1.2 if tier == 'Sprout' else 1.0
-                
                 points_to_add = int(total_paid * multiplier)
                 
                 if not customer.loyalty:
@@ -216,7 +216,8 @@ def stripe_webhook():
                 
                 # 3. NOTIFY WHATSAPP
                 if source == 'whatsapp':
-                    send_payment_confirmation(customer.phone, total_paid, items_summary, points_to_add)
+                    # ✅ FIXED: Now safely passes the invoice PDF link
+                    send_payment_confirmation(customer.phone, total_paid, items_summary, points_to_add, invoice_pdf=invoice_pdf_url)
                 
                 db.session.commit()
                 
@@ -227,72 +228,71 @@ def stripe_webhook():
 
     return jsonify(success=True), 200
 
-# --- 5. ORDER PROCESSING HELPER (Hardened Stock Deduction) ---
+# --- 5. ORDER PROCESSING HELPER (Calculations Fixed) ---
 def handle_successful_order(session_data):
     items_summary = []
     try:
         from models import db, Customer, WhatsAppOrder, Product
+        
         user_id = int(session_data.get('metadata', {}).get('user_id'))
         customer = Customer.query.get(user_id)
         if not customer: return []
 
-        # Fetch items from the completed Stripe session
+        invoice_pdf_url = None
+        if session_data.get('invoice'):
+            invoice_obj = stripe.Invoice.retrieve(session_data['invoice'])
+            invoice_pdf_url = invoice_obj.invoice_pdf 
+
         line_items = stripe.checkout.Session.list_line_items(session_data['id'], limit=100)
 
         for item in line_items.data:
-            # A. Save the order record
+            # ✅ CALCULATION IS NOW INSIDE THE LOOP
+            price_in_dollars = item.amount_total / 100
+            commission = round(price_in_dollars * 0.111, 2)
+
             new_order = WhatsAppOrder(
                 customer_id=customer.id,
                 leader_id=customer.leader_id, 
                 customer_phone=customer.phone,
                 product_name=item.description, 
                 quantity=item.quantity,
-                total_price=item.amount_total / 100,
-                commission_earned=(item.amount_total / 100) * 0.111, 
+                total_price=price_in_dollars,
+                commission_earned=commission, 
                 order_status='Paid',
+                invoice_url=invoice_pdf_url, 
                 timestamp=datetime.now(pytz.timezone('Asia/Singapore'))
             )
             db.session.add(new_order)
             items_summary.append(f"{item.quantity}x {item.description}")
 
-            # B. STOCK DEDUCTION LOGIC
+            # Stock Deduction
             try:
-                # 1. Get the Product ID from Stripe (Retrieving the full product object)
-                # This ensures we get the metadata we attached during checkout
                 stripe_product = stripe.Product.retrieve(item.price.product)
                 db_product_id = stripe_product.metadata.get('product_id')
                 
                 if db_product_id:
-                    # 2. Find the product in YOUR database
                     product = Product.query.get(int(db_product_id))
                     if product:
-                        print(f"📦 Found Product: {product.name}. Current Stock: {product.available_qty}")
-                        
-                        # 3. Deduct the amount and save
                         product.available_qty = max(0, product.available_qty - item.quantity)
-                        
                         if product.available_qty == 0:
                             product.status = "Out of Stock"
-                        
-                        print(f"📉 New Stock for {product.name}: {product.available_qty}")
-                else:
-                    print(f"⚠️ Metadata 'product_id' missing for: {item.description}")
-
             except Exception as stock_err:
-                print(f"⚠️ Stock deduction failed for {item.description}: {stock_err}")
+                print(f"⚠️ Stock deduction failed: {stock_err}")
 
         return items_summary
     except Exception as e:
         print(f"❌ handle_successful_order error: {e}")
         return []
 
-# --- 6. WHATSAPP SENDER HELPER ---
-def send_payment_confirmation(phone, amount, items, points_earned):
+# --- 6. WHATSAPP SENDER HELPER (FIXED Signature) ---
+# ✅ FIXED: Added invoice_pdf=None as a parameter so it doesn't crash
+def send_payment_confirmation(phone, amount, items, points_earned, invoice_pdf=None):
     url = f"https://graph.facebook.com/v24.0/{PHONE_NUMBER_ID}/messages"
     headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
     clean_phone = ''.join(filter(str.isdigit, str(phone)))
     
     item_list_str = "\n".join([f"• {i}" for i in items])
+    
     message_text = (
         f"🎉 *Payment Received!*\n\n"
         f"Thank you! We've received your payment of *${amount:.2f}*.\n\n"
@@ -301,6 +301,10 @@ def send_payment_confirmation(phone, amount, items, points_earned):
         f"Track your order in your account! 🚚"
     )
 
+    # ✅ Now this check works because invoice_pdf is a valid variable
+    if invoice_pdf:
+        message_text += f"\n\n📄 *Download Invoice:*\n{invoice_pdf}"
+
     try:
         requests.post(url, headers=headers, json={"messaging_product": "whatsapp", "to": clean_phone, "type": "text", "text": {"body": message_text}})
     except Exception as e:
@@ -308,4 +312,24 @@ def send_payment_confirmation(phone, amount, items, points_earned):
 
 @orders_bp.route('/success')
 def success():
-    return render_template('success.html')
+    # Fetch session ID for the receipt page logic
+    session_id = request.args.get('session_id')
+    if not session_id:
+        return render_template('success.html')
+        
+    try:
+        session_details = stripe.checkout.Session.retrieve(session_id)
+        line_items = stripe.checkout.Session.list_line_items(session_id, limit=10)
+        
+        invoice_url = None
+        if session_details.invoice:
+            inv = stripe.Invoice.retrieve(session_details.invoice)
+            invoice_url = inv.invoice_pdf
+
+        return render_template('success.html', 
+                               customer_name=session_details.customer_details.name,
+                               total_amount=session_details.amount_total / 100,
+                               items=line_items.data,
+                               invoice_url=invoice_url)
+    except:
+        return render_template('success.html')

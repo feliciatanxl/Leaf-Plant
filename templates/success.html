@@ -3,38 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Successful | Fresh Farm</title>
+    <title>Payment Successful | Leaf Plant</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
+    
+    <style>
+        body { background-color: #f8f9fa; }
+        .receipt-card {
+            max-width: 500px;
+            margin: 0 auto;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .receipt-header {
+            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+            padding: 40px 30px;
+            text-align: center;
+            border-bottom: 1px solid #eef2f5;
+        }
+        .receipt-body { padding: 30px; }
+        .success-icon {
+            font-size: 4rem;
+            color: #198754;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        .dashed-line {
+            border-bottom: 2px dashed #dee2e6;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
     
     <nav class="navbar navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" height="50">
+                <img src="{{ url_for('static', filename='image/Green Minimalist Leaf Plant Logo.png') }}" height="60" alt="Logo">
             </a>
         </div>
     </nav>
 
-    <div class="container text-center mt-5 pt-5">
-        <div class="card border-0 shadow-sm p-5 rounded-4 d-inline-block">
-            <div class="mb-4">
-                <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-            </div>
-            <h1 class="fw-bold text-dark">Payment Successful!</h1>
-            <p class="text-muted mb-4 lead">Thank you for your order. We will start harvesting your produce!</p>
+    <div class="container py-5">
+        <div class="card receipt-card">
             
-            <a href="/product" class="btn btn-success rounded-pill px-5 py-3 fw-bold">
-                Continue Shopping
-            </a>
+            <div class="receipt-header">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <h2 class="fw-bold text-dark mb-1">Payment Successful!</h2>
+                <p class="text-muted mb-0">
+                    Thank you{% if customer_name %}, {{ customer_name }}{% endif %}!
+                </p>
+                <p class="small text-muted mt-1">We have started processing your order.</p>
+            </div>
+
+            <div class="receipt-body">
+                
+                {% if total_amount %}
+                    <div class="text-center mb-4">
+                        <small class="text-uppercase text-muted fw-bold">Total Paid</small>
+                        <h1 class="fw-bold text-success">${{ "%.2f"|format(total_amount) }}</h1>
+                    </div>
+
+                    <p class="small text-muted text-uppercase fw-bold mb-3">Order Summary</p>
+                    
+                    <div class="bg-light p-3 rounded-3 mb-3">
+                        {% for item in items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                <span class="fw-bold">{{ item.description }}</span> 
+                                <small class="text-muted">x{{ item.quantity }}</small>
+                            </span>
+                            <span class="fw-bold">${{ "%.2f"|format(item.amount_total / 100) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="dashed-line"></div>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    
+                    {% if invoice_url %}
+                    <a href="{{ invoice_url }}" target="_blank" class="btn btn-outline-primary rounded-pill py-2">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Download Official Invoice
+                    </a>
+                    {% endif %}
+
+                    <a href="/account" class="btn btn-success rounded-pill fw-bold py-2 mt-2">
+                        View My Orders
+                    </a>
+                    
+                    <a href="/product" class="btn btn-link text-decoration-none text-muted small mt-1">
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Clear the cart now that payment is successful
             localStorage.removeItem('farmCart');
         });
     </script>

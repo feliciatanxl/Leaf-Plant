@@ -651,20 +651,52 @@ def delete_user(user_id):
 
 @admin_bp.route("/leaders/add", methods=['POST'])
 def add_leader():
-    user = Customer.query.filter_by(email=request.form.get('user_email')).first()
-    if user and user.phone:
+    # 1. Get and CLEAN the input (remove accidental spaces)
+    target_email = request.form.get('user_email').strip()
+    name = request.form.get('name')
+    area = request.form.get('area')
+
+    # 2. Find the User
+    user = Customer.query.filter_by(email=target_email).first()
+
+    # --- CHECK 1: Does user exist? ---
+    if not user:
+        flash(f"❌ Error: User with email '{target_email}' not found. Please register them first.", "danger")
+        return redirect(url_for('admin.dashboard', tab='manage-leaders'))
+
+    # --- CHECK 2: Do they have a phone number? ---
+    # We need the phone for WhatsApp features
+    if not user.phone:
+        flash(f"⚠️ Error: The user '{user.name}' has no phone number saved. They must update their profile first.", "warning")
+        return redirect(url_for('admin.dashboard', tab='manage-leaders'))
+
+    # --- CHECK 3: Are they ALREADY a leader? ---
+    # (This prevents the "Internal Server Error" crash)
+    existing = GroupLeader.query.filter_by(customer_id=user.id).first()
+    if existing:
+        flash(f"⚠️ Error: This user is already the leader for '{existing.area}'!", "warning")
+        return redirect(url_for('admin.dashboard', tab='manage-leaders'))
+
+    # 3. Create the Leader
+    try:
         new_leader = GroupLeader(
-            name=request.form.get('name'), 
-            phone=user.phone, 
-            area=request.form.get('area'), 
+            name=name, 
+            phone=user.phone,  # <--- Automatically takes phone from Customer profile
+            area=area, 
             customer_id=user.id
         )
-        user.role = 'leader'
+        
+        user.role = 'leader' # Upgrade their role
         db.session.add(new_leader)
         db.session.commit()
-        flash("Leader added!", "success")
-    else:
-        flash("User not found or no phone number.", "danger")
+        
+        flash(f"✅ Success! Added {name} as leader for {area}.", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Add Leader Error: {e}")
+        flash("Database error occurred.", "danger")
+
     return redirect(url_for('admin.dashboard', tab='manage-leaders'))
 
 @admin_bp.route("/leaders/delete/<int:id>", methods=['POST'])

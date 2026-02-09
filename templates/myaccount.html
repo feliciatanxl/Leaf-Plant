@@ -537,6 +537,7 @@
                                 <span class="text-success" id="modal-total-price"></span>
                             </div>
                             <p class="text-muted small mt-2"><i class="bi bi-clock me-1"></i> <span id="modal-date"></span></p>
+                            <div id="modal-invoice-container"></div>
                         </div>
                         <div class="col-lg-6">
                             <h6 class="fw-bold text-muted mb-3">Delivery Tracker</h6>
@@ -767,18 +768,32 @@
     let animationFrameId = null;
 
     function showOrderDetails(orderId) {
-        console.log("Fetching details for Order ID:", orderId);
+        console.log("Original ID:", orderId);
 
-        fetch('/myaccount/api/order-details/' + orderId)
-        .then(res => res.json())
+        // ✅ FIX: Remove the '#' so we get a clean number (e.g. "2")
+        // Your Python route expects an Integer, so we must send "2", not "#2" or "%232"
+        const cleanId = orderId.toString().replace('#', '');
+        
+        console.log("Fetching details for Clean ID:", cleanId);
+
+        // Send the clean ID to the backend
+        fetch('/myaccount/api/order-details/' + cleanId)
+        .then(response => {
+            // Check if the response is actually valid JSON
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if(data.error) { alert("API Error: " + data.error); return; }
 
-            // Populate Text Data
+            // 1. Populate Basic Data
             document.getElementById('modal-order-id').innerText = data.id;
             document.getElementById('modal-date').innerText = data.date;
             document.getElementById('modal-total-price').innerText = '$' + data.total.toFixed(2);
             
+            // 2. Populate Items List
             const itemsList = document.getElementById('modal-items-list');
             itemsList.innerHTML = '';
             data.items.forEach(item => {
@@ -789,7 +804,20 @@
                     </li>`;
             });
 
-            // Update Status Bar
+            // 3. Invoice Button Logic
+            const invoiceContainer = document.getElementById('modal-invoice-container');
+            if (invoiceContainer) {
+                if (data.invoice_url) {
+                    invoiceContainer.innerHTML = `
+                        <a href="${data.invoice_url}" target="_blank" class="btn btn-outline-primary rounded-pill w-100 mt-3 shadow-sm">
+                            <i class="bi bi-file-earmark-pdf-fill me-2"></i>Download Official Invoice
+                        </a>`;
+                } else {
+                    invoiceContainer.innerHTML = '';
+                }
+            }
+
+            // 4. Update Status Bar
             const step = data.current_step; 
             const percentage = Math.min((step - 1) * 33, 100); 
             document.getElementById('status-bar').style.width = percentage + '%';
@@ -809,70 +837,52 @@
                 }
             });
 
-            // Show Modal
+            // 5. Show Modal
             const modalEl = document.getElementById('orderDetailsModal');
             new bootstrap.Modal(modalEl).show();
 
-            // Initialize Map with OSRM (Shopee-style) logic
+            // 6. Map Logic
             modalEl.addEventListener('shown.bs.modal', function () {
                 if (map) { map.remove(); map = null; }
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 
-                // Create Map
-                map = L.map('deliveryMap').setView(data.farm_coords, 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
-                }).addTo(map);
+                // Fallback coordinates if API returns null
+                const farmCoords = data.farm_coords || [1.4173, 103.7255];
+                const userCoords = data.user_coords || [1.3521, 103.8198];
 
-                // Add Icons
+                map = L.map('deliveryMap').setView(farmCoords, 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
                 const farmIcon = L.divIcon({html: '<i class="bi bi-shop text-success fs-3"></i>', className: 'bg-transparent', iconSize: [30,30], iconAnchor: [15,15]});
                 const userIcon = L.divIcon({html: '<i class="bi bi-geo-alt-fill text-danger fs-3"></i>', className: 'bg-transparent', iconSize: [30,30], iconAnchor: [15,30]});
 
-                L.marker(data.farm_coords, {icon: farmIcon}).addTo(map).bindPopup("Farm").openPopup();
-                L.marker(data.user_coords, {icon: userIcon}).addTo(map).bindPopup("You");
+                L.marker(farmCoords, {icon: farmIcon}).addTo(map).bindPopup("Farm").openPopup();
+                L.marker(userCoords, {icon: userIcon}).addTo(map).bindPopup("You");
 
-                // --- 🚀 REAL ROAD ROUTE LOGIC (OSRM) ---
-                const start = data.farm_coords; // [lat, lng]
-                const end = data.user_coords;   // [lat, lng]
-                
-                // OSRM requires "lng,lat" string format
-                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${farmCoords[1]},${farmCoords[0]};${userCoords[1]},${userCoords[0]}?overview=full&geometries=geojson`;
 
-                fetch(osrmUrl)
-                .then(res => res.json())
-                .then(routeData => {
+                fetch(osrmUrl).then(res => res.json()).then(routeData => {
                     if (routeData.routes && routeData.routes.length > 0) {
-                        const coordinates = routeData.routes[0].geometry.coordinates; // [[lng,lat], [lng,lat]...]
-                        
-                        // Convert to Leaflet [lat, lng] format
+                        const coordinates = routeData.routes[0].geometry.coordinates;
                         const latLngs = coordinates.map(coord => [coord[1], coord[0]]);
-                        
-                        // Draw Blue Road Line
                         L.polyline(latLngs, {color: 'blue', weight: 5, opacity: 0.7}).addTo(map);
                         map.fitBounds(L.polyline(latLngs).getBounds(), {padding: [50,50]});
-
-                        // Animate Truck along the road if "Out for Delivery"
-                        if (data.status === 'Out for Delivery') {
-                            animateTruckOnPath(latLngs);
-                        }
+                        if (data.status === 'Out for Delivery') animateTruckOnPath(latLngs);
                     } else {
-                        // Fallback straight line if road not found
-                        L.polyline([start, end], {color: 'red', dashArray: '5, 10'}).addTo(map);
+                        L.polyline([farmCoords, userCoords], {color: 'red', dashArray: '5, 10'}).addTo(map);
                     }
-                })
-                .catch(err => {
-                    console.log("OSRM Error, falling back to straight line", err);
-                    L.polyline([start, end], {color: 'red', dashArray: '5, 10'}).addTo(map);
+                }).catch(err => {
+                    console.log("OSRM Error", err);
+                    L.polyline([farmCoords, userCoords], {color: 'red', dashArray: '5, 10'}).addTo(map);
                 });
 
             }, { once: true }); 
         })
         .catch(err => {
             console.error(err);
-            alert("Failed to load details. " + err.message);
+            // alert("Failed to load details: " + err.message); 
         });
     }
-
     // --- 🚀 NEW VOUCHER MODAL LOGIC STARTS HERE ---
     let pendingVoucherType = null;
 

@@ -8,6 +8,7 @@ from geopy.exc import GeocoderTimedOut
 from datetime import datetime, timedelta 
 import stripe
 import os
+from urllib.parse import unquote
 
 myaccount_bp = Blueprint('myaccount', __name__)
 
@@ -272,7 +273,7 @@ def delete_account():
         return redirect(url_for('myaccount.myaccount'))
     
 # ==============================================================================
-# ORDER API
+# ORDER API (Clean Integer Version)
 # ==============================================================================
 
 @myaccount_bp.route('/myaccount/api/order-details/<int:order_id>')
@@ -280,25 +281,37 @@ def get_order_details(order_id):
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
+    # 1. Query by ID directly (No strings, no decoding needed)
     first_item = WhatsAppOrder.query.get(order_id)
-    user = Customer.query.get(session['user_id']) 
+    
     if not first_item or first_item.customer_id != session['user_id']:
         return jsonify({'error': 'Order not found'}), 404
 
-    batch_items = WhatsAppOrder.query.filter_by(customer_id=session['user_id'], timestamp=first_item.timestamp).all()
+    # 2. Fetch the group using timestamp
+    # (Since your DB stores items individually, we group by the exact time they were bought)
+    batch_items = WhatsAppOrder.query.filter_by(
+        customer_id=session['user_id'], 
+        timestamp=first_item.timestamp
+    ).all()
+
     total_price = sum(item.total_price for item in batch_items)
     items_data = [{'name': i.product_name, 'qty': i.quantity, 'price': i.total_price} for i in batch_items]
 
-    status_map = {'Pending Payment': 0, 'Confirmed': 1, 'Harvesting': 2, 'Packing': 3, 'Out for Delivery': 4, 'Delivered': 5}
+    status_map = {
+        'Paid': 1, 'Confirmed': 1, 'Harvesting': 2, 
+        'Packing': 3, 'Out for Delivery': 4, 'Delivered': 5
+    }
     
     return jsonify({
-        'id': first_item.id,
+        'id': f"#{first_item.id}", 
         'date': first_item.timestamp.strftime('%d %b %Y, %I:%M %p'),
         'status': first_item.order_status,
         'current_step': status_map.get(first_item.order_status, 1),
         'total': total_price,
         'items': items_data,
-        'farm_coords': [1.4000, 103.7400], 
-        'user_coords': get_coordinates(user.postal_code) or [1.3521, 103.8198]
+        'farm_coords': [1.4173, 103.7255], 
+        'user_coords': get_coordinates(session.get('user_postal', '')) or [1.3521, 103.8198],
+        
+        # 👇 INVOICE URL
+        'invoice_url': first_item.invoice_url
     })
-    

@@ -1557,6 +1557,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // ==========================================
     // 1. Validation & Utility Logic
@@ -1566,12 +1567,30 @@
         if (stock <= 0) { console.log("Status: Out of Stock"); }
     }
 
+    /**
+     * Handles image previews for both File Uploads and Text URLs
+     */
     function previewImage(input, previewId, iconId) {
         const preview = document.getElementById(previewId);
         const icon = document.getElementById(iconId);
         if (!preview || !icon) return;
-        if (input.value && input.value.trim() !== "") {
-            preview.src = "/static/image/" + input.value;
+
+        // Case A: User selected a file from computer
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                icon.classList.add('d-none');
+            };
+            reader.readAsDataURL(input.files[0]);
+        } 
+        // Case B: User typed a URL (or existing value)
+        else if (input.value && input.value.trim() !== "") {
+            // Determine if it's a relative static path or full URL
+            const src = input.value.startsWith('http') ? input.value : "/static/image/" + input.value;
+            preview.src = src;
+            
             preview.onload = function () {
                 preview.classList.remove('d-none');
                 icon.classList.add('d-none');
@@ -1581,7 +1600,9 @@
                 icon.classList.remove('d-none');
                 icon.className = "bi bi-file-earmark-x text-danger fs-4";
             };
-        } else {
+        } 
+        // Case C: Empty
+        else {
             preview.classList.add('d-none');
             icon.classList.remove('d-none');
             icon.className = "bi bi-image text-muted fs-4";
@@ -1597,26 +1618,8 @@
         }
     }
 
-    function previewImageFile(input, previewId, iconId) {
-        const preview = document.getElementById(previewId);
-        const icon = document.getElementById(iconId);
-
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-                preview.classList.remove('d-none');
-                icon.classList.add('d-none');
-            }
-            reader.readAsDataURL(input.files[0]);
-        } else {
-            preview.classList.add('d-none');
-            icon.classList.remove('d-none');
-        }
-    }
-
     // ==========================================
-    // 2. Navigation & Dashboard Logic (UPDATED)
+    // 2. Navigation & Dashboard Logic (CRITICAL FIXES HERE)
     // ==========================================
     function showAdminSection(event, sectionId) {
         if (event) event.preventDefault();
@@ -1638,10 +1641,11 @@
         document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); });
         if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
         
+        // Update URL hash safely
         history.pushState(null, null, '#' + sectionId);
         window.scrollTo(0, 0);
 
-        // 👇 NEW: Initialize Charts if Analytics is selected
+        // Initialize Charts ONLY if Analytics is selected
         if (sectionId === 'analytics') {
             setTimeout(initCharts, 100);
         }
@@ -1665,58 +1669,55 @@
     }
 
     function refreshDashboardData() {
-    // Check if either tab is active. If neither is visible, we can skip to save resources.
-    const dashboardTab = document.getElementById('dashboard');
-    const analyticsTab = document.getElementById('analytics');
-    
-    const isDashboardVisible = dashboardTab && dashboardTab.style.display !== 'none';
-    const isAnalyticsVisible = analyticsTab && analyticsTab.style.display !== 'none';
+        // Optimize: Only refresh if Dashboard or Analytics tab is actually visible
+        const dashboardTab = document.getElementById('dashboard');
+        const analyticsTab = document.getElementById('analytics');
+        
+        const isDashboardVisible = dashboardTab && dashboardTab.style.display !== 'none';
+        const isAnalyticsVisible = analyticsTab && analyticsTab.style.display !== 'none';
 
-    if (!isDashboardVisible && !isAnalyticsVisible) return;
+        if (!isDashboardVisible && !isAnalyticsVisible) return;
 
-    fetch('/admin/api/products')
-        .then(response => response.json())
-        .then(data => {
-            if (data.stats) {
-                // --- Update DASHBOARD Tab Elements ---
-                if (isDashboardVisible) {
-                    const syncDisplay = document.getElementById('sync-display');
-                    if (syncDisplay) syncDisplay.innerText = data.stats.sync_time;
-                    if(document.getElementById('live-alert-count')) 
-                        document.getElementById('live-alert-count').innerText = data.stats.active_alerts_count;
-                    if(document.getElementById('live-total-orders')) 
-                        document.getElementById('live-total-orders').innerText = data.stats.total_orders_count;
-                    if(document.getElementById('live-total-sales')) 
-                        document.getElementById('live-total-sales').innerText = data.stats.total_sales_value;
-                    if(document.getElementById('live-total-profit')) 
-                        document.getElementById('live-total-profit').innerText = data.stats.total_profit_value;
-                    if(document.getElementById('live-total-commissions')) 
-                        document.getElementById('live-total-commissions').innerText = data.stats.total_commissions;
+        fetch('/admin/api/products')
+            .then(response => response.json())
+            .then(data => {
+                if (data.stats) {
+                    // --- SAFE UPDATES (Prevents JS Crash if element is missing) ---
+                    const safeSetText = (id, text) => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerText = text;
+                    };
+
+                    // Dashboard Tab
+                    safeSetText('sync-display', data.stats.sync_time);
+                    safeSetText('live-alert-count', data.stats.active_alerts_count);
+                    safeSetText('live-total-orders', data.stats.total_orders_count);
+                    safeSetText('live-total-sales', data.stats.total_sales_value);
+                    safeSetText('live-total-profit', data.stats.total_profit_value);
+                    safeSetText('live-total-commissions', data.stats.total_commissions);
+
+                    // Analytics Tab
+                    if(document.getElementById('totalSalesAmount')) 
+                        document.getElementById('totalSalesAmount').innerText = '$' + data.stats.total_sales_value;
+                    safeSetText('activeCoupons', data.stats.active_coupons_count);
                 }
 
-                // --- Update ANALYTICS Tab Elements ---
-                // We check if the elements exist before trying to update them
-                const analyticsSales = document.getElementById('totalSalesAmount');
-                if (analyticsSales) analyticsSales.innerText = '$' + data.stats.total_sales_value;
-
-                const analyticsCoupons = document.getElementById('activeCoupons');
-                if (analyticsCoupons) analyticsCoupons.innerText = data.stats.active_coupons_count;
-            }
-
-            // --- Update Product Table (Always update if products tab exists in DOM) ---
-            (data.products || []).forEach(p => {
-                const qtyCell = document.getElementById(`qty-${p.id}`);
-                if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
-                
-                const badge = document.getElementById(`status-${p.id}`);
-                if (badge) {
-                    badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
-                    badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
-                }
-            });
-        }).catch(err => console.log("Sync paused:", err));
-}
-setInterval(refreshDashboardData, 3000);
+                // Update Product Table (Rows might exist on Products tab)
+                (data.products || []).forEach(p => {
+                    const qtyCell = document.getElementById(`qty-${p.id}`);
+                    if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
+                    
+                    const badge = document.getElementById(`status-${p.id}`);
+                    if (badge) {
+                        badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
+                        badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
+                    }
+                });
+            })
+            .catch(err => console.log("Sync paused (network/parsing):", err));
+    }
+    // Refresh every 5 seconds
+    setInterval(refreshDashboardData, 5000);
 
     // ==========================================
     // 3. Marketing Campaign Logic
@@ -1724,15 +1725,18 @@ setInterval(refreshDashboardData, 3000);
     let currentDiscount = 0;
 
     function handleCampaignChange() {
-        const type = document.getElementById('campaignType').value;
+        const typeEl = document.getElementById('campaignType');
+        if (!typeEl) return;
+        
+        const type = typeEl.value;
         const productWrapper = document.getElementById('targetProductWrapper');
         const customWrapper = document.getElementById('customGoalWrapper');
 
-        if (type === 'all') { productWrapper.classList.add('d-none'); }
-        else { productWrapper.classList.remove('d-none'); }
+        if (type === 'all') { productWrapper?.classList.add('d-none'); }
+        else { productWrapper?.classList.remove('d-none'); }
 
-        if (type === 'custom') { customWrapper.classList.remove('d-none'); }
-        else { customWrapper.classList.add('d-none'); }
+        if (type === 'custom') { customWrapper?.classList.remove('d-none'); }
+        else { customWrapper?.classList.add('d-none'); }
     }
 
     function analyzeAudience() {
@@ -1765,19 +1769,19 @@ setInterval(refreshDashboardData, 3000);
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ product_id: pId, campaign_type: cType, custom_goal: customInput })
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                window.targetProductId = pId;
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            window.targetProductId = pId;
 
-                let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
-                document.getElementById('uiTriggers').innerText = audienceLabel;
+            let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
+            document.getElementById('uiTriggers').innerText = audienceLabel;
 
-                const statusLabel = document.getElementById('draftStatus');
+            const statusLabel = document.getElementById('draftStatus');
 
-                if (data.promo_code && data.promo_code !== "null") {
-                    currentDiscount = data.discount_percent || 0;
-                    const alertHtml = `
+            if (data.promo_code && data.promo_code !== "null") {
+                currentDiscount = data.discount_percent || 0;
+                const alertHtml = `
                 <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mt-3 promo-success-alert" role="alert">
                     <i class="bi bi-magic me-2 fs-4"></i>
                     <div>
@@ -1787,33 +1791,34 @@ setInterval(refreshDashboardData, 3000);
                         <small>Edit the code in the text box below to update this.</small>
                     </div>
                 </div>`;
-                    messageArea.insertAdjacentHTML('beforebegin', alertHtml);
-                    statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
-                } else {
-                    currentDiscount = 0;
-                    statusLabel.innerText = "AI Generated (No Code)";
-                }
+                messageArea.insertAdjacentHTML('beforebegin', alertHtml);
+                statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
+            } else {
+                currentDiscount = 0;
+                statusLabel.innerText = "AI Generated (No Code)";
+            }
 
-                let finalMessage = data.message;
-                if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
-                    finalMessage += `\n\nUse promo code: ${data.promo_code}`;
-                }
+            let finalMessage = data.message;
+            if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
+                finalMessage += `\n\nUse promo code: ${data.promo_code}`;
+            }
 
-                messageArea.value = finalMessage;
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
-            })
-            .catch(error => {
-                console.error(error);
-                btn.disabled = false;
-                btn.innerHTML = 'Try Again';
-                alert("Error generating draft: " + error.message);
-            });
+            messageArea.value = finalMessage;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
+        })
+        .catch(error => {
+            console.error(error);
+            btn.disabled = false;
+            btn.innerHTML = 'Try Again';
+            alert("Error generating draft: " + error.message);
+        });
     }
 
-    // Live Text Listener
-    if (document.getElementById('uiMessage')) {
-        document.getElementById('uiMessage').addEventListener('input', function (e) {
+    // Live Text Listener for Promo Codes
+    const uiMessageEl = document.getElementById('uiMessage');
+    if (uiMessageEl) {
+        uiMessageEl.addEventListener('input', function (e) {
             const text = e.target.value;
             const badge = document.getElementById('liveCodeBadge');
             let bestCode = "";
@@ -1836,21 +1841,11 @@ setInterval(refreshDashboardData, 3000);
 
                 if (bestCode) {
                     badge.innerText = bestCode;
+                    // Auto-update discount variable based on numbers found in code (e.g. SAVE20 -> 20%)
                     const discountMatch = bestCode.match(/(\d+)$/);
                     if (discountMatch) {
                         const extractedNum = parseInt(discountMatch[1]);
                         if (extractedNum > 0 && extractedNum <= 100) {
-                            if (currentDiscount > 0 && currentDiscount !== extractedNum) {
-                                const oldPercentString = currentDiscount + "%";
-                                const newPercentString = extractedNum + "%";
-                                if (text.includes(oldPercentString)) {
-                                    const start = e.target.selectionStart;
-                                    const end = e.target.selectionEnd;
-                                    const newText = text.replace(oldPercentString, newPercentString);
-                                    e.target.value = newText;
-                                    e.target.setSelectionRange(start, end);
-                                }
-                            }
                             currentDiscount = extractedNum;
                         }
                     }
@@ -1860,15 +1855,18 @@ setInterval(refreshDashboardData, 3000);
     }
 
     function launchCampaign() {
-        const confirmModal = new bootstrap.Modal(document.getElementById('campaignConfirmModal'));
-        confirmModal.show();
+        const modalEl = document.getElementById('campaignConfirmModal');
+        if(modalEl) {
+            const confirmModal = new bootstrap.Modal(modalEl);
+            confirmModal.show();
+        }
     }
 
     function executeFinalCampaignSend() {
         const launchBtn = document.getElementById('launchBtn');
         const finalMessage = document.getElementById('uiMessage').value;
         const confirmModalInstance = bootstrap.Modal.getInstance(document.getElementById('campaignConfirmModal'));
-        confirmModalInstance.hide();
+        if(confirmModalInstance) confirmModalInstance.hide();
 
         let finalCode = null;
         const badge = document.getElementById('liveCodeBadge');
@@ -1887,42 +1885,44 @@ setInterval(refreshDashboardData, 3000);
                 discount_percent: currentDiscount
             })
         })
-            .then(res => res.json())
-            .then(data => {
-                const count = (data.sent_count !== undefined) ? data.sent_count : 0;
-                document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
-                new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
-                launchBtn.disabled = false;
-                launchBtn.innerHTML = 'Launch Campaign';
-            })
-            .catch(err => {
-                alert("Send failed.");
-                launchBtn.disabled = false;
-            });
+        .then(res => res.json())
+        .then(data => {
+            const count = (data.sent_count !== undefined) ? data.sent_count : 0;
+            document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
+            new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
+        })
+        .catch(err => {
+            alert("Send failed.");
+        })
+        .finally(() => {
+            launchBtn.disabled = false;
+            launchBtn.innerHTML = 'Launch Campaign';
+        });
     }
 
     // ==========================================
-    // 4. Analytics & Charts Logic (CLEANED)
+    // 4. Analytics & Charts Logic
     // ==========================================
     let salesChartInstance = null;
     let topSellingChartInstance = null;
 
     function initCharts() {
-        const ctxSales = document.getElementById('salesChart')?.getContext('2d');
-        const ctxTop = document.getElementById('topSellingChart')?.getContext('2d');
+        const canvasSales = document.getElementById('salesChart');
+        const canvasTop = document.getElementById('topSellingChart');
+
+        // Check if elements exist (Crucial fix for Add Leader page crash)
+        if (!canvasSales || !canvasTop) return;
+
+        const ctxSales = canvasSales.getContext('2d');
+        const ctxTop = canvasTop.getContext('2d');
         
-        // 1. GET SELECTED TIME PERIOD
-        const timeFilter = document.getElementById('analyticsTimeFilter').value; 
+        const timeFilterEl = document.getElementById('analyticsTimeFilter');
+        const timeFilter = timeFilterEl ? timeFilterEl.value : 'week';
 
-        // Safety check
-        if (!ctxSales || !ctxTop) return;
-
-        // 2. SEND REQUEST TO PYTHON
         fetch(`/admin/api/analytics?period=${timeFilter}`)
             .then(response => response.json())
             .then(data => {
-                
-                // --- A. UPDATE SALES CHART ---
+                // A. Update Sales Chart
                 if (salesChartInstance) salesChartInstance.destroy();
                 salesChartInstance = new Chart(ctxSales, {
                     type: 'line',
@@ -1940,7 +1940,7 @@ setInterval(refreshDashboardData, 3000);
                     options: { responsive: true, maintainAspectRatio: false }
                 });
 
-                // --- B. UPDATE TOP PRODUCTS CHART ---
+                // B. Update Top Products Chart
                 if (topSellingChartInstance) topSellingChartInstance.destroy();
                 topSellingChartInstance = new Chart(ctxTop, {
                     type: 'doughnut',
@@ -1955,11 +1955,10 @@ setInterval(refreshDashboardData, 3000);
                     options: { responsive: true, maintainAspectRatio: false }
                 });
 
-                // --- C. UPDATE DEMAND WATCHLIST TABLE (New) ---
+                // C. Update Demand Table
                 const demandTable = document.getElementById('analyticsDemandTable');
                 if (demandTable) {
-                    demandTable.innerHTML = ''; // Clear "Loading..." message
-                    
+                    demandTable.innerHTML = '';
                     if (data.demand && data.demand.length > 0) {
                         data.demand.forEach(item => {
                             demandTable.innerHTML += `
@@ -1970,18 +1969,10 @@ setInterval(refreshDashboardData, 3000);
                                             <i class="bi bi-person-fill me-1"></i> ${item.count} waiting
                                         </span>
                                     </td>
-                                </tr>
-                            `;
+                                </tr>`;
                         });
                     } else {
-                        demandTable.innerHTML = `
-                            <tr>
-                                <td colspan="2" class="text-center py-4 text-muted">
-                                    <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
-                                    No active stock alerts.
-                                </td>
-                            </tr>
-                        `;
+                        demandTable.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>No active stock alerts.</td></tr>`;
                     }
                 }
             })
@@ -1995,6 +1986,7 @@ setInterval(refreshDashboardData, 3000);
         updateAccountLinkState();
         handleCampaignChange();
 
+        // Setup Delete User Modals
         const deleteUserModal = document.getElementById('deleteUserModal');
         if (deleteUserModal) {
             deleteUserModal.addEventListener('show.bs.modal', function (event) {
@@ -2004,11 +1996,16 @@ setInterval(refreshDashboardData, 3000);
             });
         }
 
+        // Activate Correct Tab from URL Hash or Query Param
         let activeId = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get('tab') || 'dashboard';
-        const targetSection = document.getElementById(activeId.split('&')[0]);
-        if (targetSection) {
-            showAdminSection(null, activeId.split('&')[0]);
-        }
+        
+        // Clean the ID string (remove &refresh=true etc)
+        activeId = activeId.split('&')[0].split('?')[0];
+
+        // Verify ID exists, fallback to dashboard
+        if (!document.getElementById(activeId)) activeId = 'dashboard';
+        
+        showAdminSection(null, activeId);
     });
 
     function updateLiveClock() {
@@ -2019,6 +2016,7 @@ setInterval(refreshDashboardData, 3000);
     setInterval(updateLiveClock, 1000);
 
     function generateAIDescription(btn) {
+        // Find inputs relative to the button (works for Add and Edit modals)
         const modal = btn.closest('.modal-content');
         const nameInput = modal.querySelector('input[name="name"]');
         const categorySelect = modal.querySelector('select[name="category"]');
@@ -2029,7 +2027,7 @@ setInterval(refreshDashboardData, 3000);
         const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
 
         if (!productName || categorySelect.value === "") {
-            alert("Please ensure Product Name and Category are filled so the AI knows what to write about.");
+            alert("Please fill in the Product Name and Category first.");
             return;
         }
 
@@ -2046,23 +2044,23 @@ setInterval(refreshDashboardData, 3000);
                 category: categoryName
             })
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.description) {
-                    descriptionTextarea.value = data.description;
-                } else {
-                    alert("AI Error: " + (data.error || "Could not generate text"));
-                }
-            })
-            .catch(err => {
-                console.error("Fetch Error:", err);
-                alert("Failed to connect to the AI service.");
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                if (loader) loader.classList.add('d-none');
-            });
+        .then(res => res.json())
+        .then(data => {
+            if (data.description) {
+                descriptionTextarea.value = data.description;
+            } else {
+                alert("AI Error: " + (data.error || "Could not generate text"));
+            }
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            alert("Failed to connect to the AI service.");
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            if (loader) loader.classList.add('d-none');
+        });
     }
 </script>
 </body>
