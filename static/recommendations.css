@@ -75,7 +75,7 @@
 }
 
 .recommendation-image-container {
-    height: 150px; /* Reduced height (was 200px) */
+    height: 100px; /* Reduced height (was 200px) */
     width: 100%;
     display: flex;
     align-items: center;
