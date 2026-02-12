@@ -48,6 +48,9 @@ class WhatsAppOrder(db.Model):
     order_status = db.Column(db.String(50), default='New Order')
     timestamp = db.Column(db.DateTime, default=get_sg_time)
     invoice_url = db.Column(db.String(500), nullable=True)
+    delivery_address = db.Column(db.String(255), nullable=True) 
+    delivery_postal = db.Column(db.String(10), nullable=True)
+    delivery_unit = db.Column(db.String(20), nullable=True)
 
 class WhatsAppLead(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,7 +100,7 @@ class Customer(db.Model):
     postal_code = db.Column(db.String(6), nullable=True)  
     street_address = db.Column(db.String(255), nullable=True) 
     unit_number = db.Column(db.String(10), nullable=True) 
-    loyalty = db.relationship('LoyaltyPoints', backref='customer', uselist=False, lazy=True)
+    loyalty = db.relationship('LoyaltyPoints', backref='customer', uselist=False, lazy=True, cascade="all, delete-orphan")
 
     @property
     def points(self):

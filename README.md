@@ -12,7 +12,7 @@ Step 4: python main.py (running on venv address)
 # Whatsapp Business API
 Step 1: Make sure you are in your venv. <br>
 Step 2: Open CMD and key in ngrok config add-authtoken $YOUR_AUTHTOKEN (direct to whatsapp folder ngrok.exe)<br>
-Step 3: .\ngrok http 5000 (1st Terminal) <br>
+Step 3: cd whatsapp > .\ngrok http 5000 (1st Terminal) <br>
 Step 4: cd whatsapp > python app.py (2nd Terminal)
 
 # Stripe CLI

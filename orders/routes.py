@@ -279,7 +279,10 @@ def handle_successful_order(session_data):
                 commission_earned=commission, 
                 order_status='Paid',
                 invoice_url=invoice_pdf_url, 
-                timestamp=datetime.now(pytz.timezone('Asia/Singapore'))
+                timestamp=datetime.now(pytz.timezone('Asia/Singapore')),
+                delivery_address=customer.street_address,       
+                delivery_postal=customer.postal_code,    
+                delivery_unit=customer.unit_number
             )
             db.session.add(new_order)
             items_summary.append(f"{item.quantity}x {item.description}")
@@ -303,8 +306,7 @@ def handle_successful_order(session_data):
         print(f"❌ handle_successful_order error: {e}")
         return []
 
-# --- 6. WHATSAPP SENDER HELPER (FIXED Signature) ---
-# ✅ FIXED: Added invoice_pdf=None as a parameter so it doesn't crash
+# --- 6. WHATSAPP SENDER HELPER  ---
 def send_payment_confirmation(phone, amount, items, points_earned, invoice_pdf=None):
     url = f"https://graph.facebook.com/v24.0/{PHONE_NUMBER_ID}/messages"
     headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}

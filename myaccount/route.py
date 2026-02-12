@@ -258,18 +258,53 @@ def update_profile():
 
 @myaccount_bp.route('/delete_account', methods=['POST'])
 def delete_account():
+    # 1. Security Check
     if 'user_id' not in session:
         abort(401)
+    
     user = Customer.query.get(session['user_id'])
+    
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
     try:
+        # 👇 STEP 1: Delete Loyalty Data
+        if user.loyalty:
+            # Delete transactions first
+            for transaction in user.loyalty.transactions:
+                db.session.delete(transaction)
+            
+            # Delete the loyalty wallet
+            db.session.delete(user.loyalty)
+            
+            # ⚡ CRITICAL FIX: Force the DB to process these deletes NOW
+            # This prevents the "0 rows matched" warning later
+            db.session.flush() 
+
+        # 👇 STEP 2: Delete Vouchers
+        vouchers = Voucher.query.filter_by(customer_id=user.id).all()
+        for v in vouchers:
+            db.session.delete(v)
+            
+        # ⚡ Force flush again to be safe
+        db.session.flush()
+
+        # 👇 STEP 3: Delete the User
         db.session.delete(user)
+        
+        # Commit everything permanently
         db.session.commit()
+        
+        # 4. Success!
         session.clear()
         flash("Your account has been deleted.", "info")
-        return redirect(url_for('account')) 
+        return redirect(url_for('index')) 
+        
     except Exception as e:
         db.session.rollback()
-        flash("Could not delete account.", "danger")
+        print(f"❌ Delete Account Error: {e}")
+        flash("Could not delete account. Please contact support.", "danger")
         return redirect(url_for('myaccount.myaccount'))
     
 # ==============================================================================
@@ -311,7 +346,5 @@ def get_order_details(order_id):
         'items': items_data,
         'farm_coords': [1.4173, 103.7255], 
         'user_coords': get_coordinates(session.get('user_postal', '')) or [1.3521, 103.8198],
-        
-        # 👇 INVOICE URL
         'invoice_url': first_item.invoice_url
     })
