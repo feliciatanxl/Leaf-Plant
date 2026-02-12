@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import stripe
 import os
 from urllib.parse import unquote
+import requests
 
 myaccount_bp = Blueprint('myaccount', __name__)
 
@@ -47,14 +48,28 @@ def get_neighborhood_name(postal_code):
     return sector_map.get(sector, "Singapore")
 
 def get_coordinates(postal_code):
+    """
+    Automated high-precision geocoding using Singapore OneMap API.
+    Provides exact building pins for 1.5 million+ SG postal codes.
+    """
+    if not postal_code or len(str(postal_code)) < 6:
+        return [1.3521, 103.8198] # Default SG center
+
     try:
-        geolocator = Nominatim(user_agent="my_flask_app")
-        location = geolocator.geocode(f"{postal_code}, Singapore", timeout=10)
-        if location:
-            return [location.latitude, location.longitude]
-    except:
-        pass
-    return None
+        # Call official SLA OneMap Search API
+        url = f"https://www.onemap.gov.sg/api/common/elastic/search?searchVal={postal_code}&returnGeom=Y&getAddrDetails=Y"
+        response = requests.get(url, timeout=5)
+        data = response.json()
+
+        # Extract precise building-level Latitude/Longitude
+        if data.get('found', 0) > 0:
+            result = data['results'][0]
+            return [float(result['LATITUDE']), float(result['LONGITUDE'])]
+            
+    except Exception as e:
+        print(f"OneMap API Error: {e}")
+        
+    return [1.3521, 103.8198] # Fallback
 
 # ==============================================================================
 # MAIN ACCOUNT ROUTE
@@ -337,6 +352,8 @@ def get_order_details(order_id):
         'Packing': 3, 'Out for Delivery': 4, 'Delivered': 5
     }
     
+    order_postal = first_item.delivery_postal or session.get('user_postal', '')
+    
     return jsonify({
         'id': f"#{first_item.id}", 
         'date': first_item.timestamp.strftime('%d %b %Y, %I:%M %p'),
@@ -345,6 +362,6 @@ def get_order_details(order_id):
         'total': total_price,
         'items': items_data,
         'farm_coords': [1.4173, 103.7255], 
-        'user_coords': get_coordinates(session.get('user_postal', '')) or [1.3521, 103.8198],
+        'user_coords': get_coordinates(order_postal),
         'invoice_url': first_item.invoice_url
     })

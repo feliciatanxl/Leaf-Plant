@@ -850,7 +850,7 @@
                 const farmCoords = data.farm_coords || [1.4173, 103.7255];
                 const userCoords = data.user_coords || [1.3521, 103.8198];
 
-                map = L.map('deliveryMap').setView(farmCoords, 13);
+                map = L.map('deliveryMap').setView(userCoords, 16);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
                 const farmIcon = L.divIcon({html: '<i class="bi bi-shop text-success fs-3"></i>', className: 'bg-transparent', iconSize: [30,30], iconAnchor: [15,15]});
