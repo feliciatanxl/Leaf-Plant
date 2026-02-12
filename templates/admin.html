@@ -81,7 +81,8 @@
                                 class="bi bi-tag-fill me-2"></i> Promo Code</a>
                         <a class="nav-link" href="#" onclick="return showAdminSection(event, 'customer-service')"><i
                                 class="bi bi-headset me-2"></i> Customer Service</a>
-                        <a class="nav-link" href="#" onclick="return showAdminSection(event, 'analytics')"><i class="bi bi-bar-chart-line me-2"></i> Analytics</a>
+                        <a class="nav-link" href="#" onclick="return showAdminSection(event, 'analytics')"><i
+                                class="bi bi-bar-chart-line me-2"></i> Analytics</a>
                         <!-- <a class="nav-link" href="#" onclick="return showAdminSection(event, 'settings')"><i class="bi bi-gear me-2"></i> Settings</a> -->
                         <hr class="my-2">
                         <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}"><i
@@ -391,116 +392,120 @@
                     </div>
 
                     <div id="analytics" class="user-section">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h1 class="display-6 text-primary-green fw-bold">Business Analytics</h1>
-                            <p class="text-muted">Real-time data insights and performance metrics.</p>
-                        </div>
-                        <!-- <button class="btn btn-outline-success btn-sm shadow-sm" onclick="window.print()">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h1 class="display-6 text-primary-green fw-bold">Business Analytics</h1>
+                                <p class="text-muted">Real-time data insights and performance metrics.</p>
+                            </div>
+                            <!-- <button class="btn btn-outline-success btn-sm shadow-sm" onclick="window.print()">
                             <i class="bi bi-download me-2"></i>Download Report
                         </button> -->
-                    </div>
+                        </div>
 
-                    <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
-                        <div class="row align-items-end g-3">
-                            <div class="col-md-4">
-                                <label class="form-label text-muted small fw-bold">TIME PERIOD</label>
-                                <select id="analyticsTimeFilter" class="form-select bg-light border-0" onchange="initCharts()"> 
-                                    <option value="today">📅 Today</option>
-                                    <option value="week" selected>📅 Last 7 Days</option>
-                                    <option value="month">📅 This Month</option>
-                                    <option value="year">📅 This Year</option>
-                                </select>
-                            </div>
-                            <div class="col-md-8 text-end">
-                                <small class="text-muted">Data auto-refreshes every 30 seconds.</small>
+                        <div class="card shadow-sm border-0 p-4 mb-4 rounded-4">
+                            <div class="row align-items-end g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold">TIME PERIOD</label>
+                                    <select id="analyticsTimeFilter" class="form-select bg-light border-0"
+                                        onchange="initCharts()">
+                                        <option value="today">📅 Today</option>
+                                        <option value="week" selected>📅 Last 7 Days</option>
+                                        <option value="month">📅 This Month</option>
+                                        <option value="year">📅 This Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8 text-end">
+                                    <small class="text-muted">Data auto-refreshes every 30 seconds.</small>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-3 bg-success text-white rounded-4 h-100">
-                                <div class="d-flex justify-content-between align-items-center h-100">
-                                    <div>
-                                        <small class="text-white-50 text-uppercase fw-bold">Total Sales (MTD)</small>
-                                        <h3 class="mb-0 fw-bold" id="totalSalesAmount">$0.00</h3>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm p-3 bg-success text-white rounded-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-center h-100">
+                                        <div>
+                                            <small class="text-white-50 text-uppercase fw-bold">Total Sales
+                                                (MTD)</small>
+                                            <h3 class="mb-0 fw-bold" id="totalSalesAmount">$0.00</h3>
+                                        </div>
+                                        <i class="bi bi-currency-dollar fs-1 opacity-25"></i>
                                     </div>
-                                    <i class="bi bi-currency-dollar fs-1 opacity-25"></i>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-3 bg-warning text-dark rounded-4 h-100">
-                                <div class="d-flex justify-content-between align-items-center h-100">
-                                    <div>
-                                        <small class="text-dark-50 text-uppercase fw-bold">Active Coupons</small>
-                                        <h3 class="mb-0 fw-bold" id="activeCoupons">12</h3>
+
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm p-3 bg-warning text-dark rounded-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-center h-100">
+                                        <div>
+                                            <small class="text-dark-50 text-uppercase fw-bold">Active Coupons</small>
+                                            <h3 class="mb-0 fw-bold" id="activeCoupons">12</h3>
+                                        </div>
+                                        <i class="bi bi-ticket-perforated fs-1 opacity-25"></i>
                                     </div>
-                                    <i class="bi bi-ticket-perforated fs-1 opacity-25"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold text-dark m-0">Total Sales Trend</h5>
-                                    <span class="badge bg-light text-muted border">Revenue</span>
-                                </div>
-                                <div style="height: 300px;">
-                                    <canvas id="salesChart"></canvas>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold text-dark m-0">Top Products</h5>
-                                    <span class="badge bg-light text-muted border">Volume</span>
-                                </div>
-                                <div style="height: 300px;">
-                                    <canvas id="topSellingChart"></canvas>
+                        <div class="row g-4">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h5 class="fw-bold text-dark m-0">Total Sales Trend</h5>
+                                        <span class="badge bg-light text-muted border">Revenue</span>
+                                    </div>
+                                    <div style="height: 300px;">
+                                        <canvas id="salesChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm p-4 rounded-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="fw-bold text-dark m-0">
-                                        <i class="bi bi-eye-fill me-2 text-primary"></i>Stock Alert Demand
-                                    </h5>
-                                    <small class="text-muted">Customers waiting for out-of-stock items</small>
+                            <div class="col-lg-4">
+                                <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h5 class="fw-bold text-dark m-0">Top Products</h5>
+                                        <span class="badge bg-light text-muted border">Volume</span>
+                                    </div>
+                                    <div style="height: 300px;">
+                                        <canvas id="topSellingChart"></canvas>
+                                    </div>
                                 </div>
-                                
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="bg-light text-uppercase small text-muted">
-                                            <tr>
-                                                <th class="ps-3">Product Name</th>
-                                                <th class="text-end pe-3">Waiting Count</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="analyticsDemandTable">
-                                            <tr>
-                                                <td colspan="2" class="text-center py-4 text-muted">
-                                                    <span class="spinner-border spinner-border-sm me-2"></span>Loading demand data...
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm p-4 rounded-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="fw-bold text-dark m-0">
+                                                <i class="bi bi-eye-fill me-2 text-primary"></i>Stock Alert Demand
+                                            </h5>
+                                            <small class="text-muted">Customers waiting for out-of-stock items</small>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="bg-light text-uppercase small text-muted">
+                                                    <tr>
+                                                        <th class="ps-3">Product Name</th>
+                                                        <th class="text-end pe-3">Waiting Count</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="analyticsDemandTable">
+                                                    <tr>
+                                                        <td colspan="2" class="text-center py-4 text-muted">
+                                                            <span
+                                                                class="spinner-border spinner-border-sm me-2"></span>Loading
+                                                            demand data...
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    </div>
-                </div>
                     <div id="customer-service" class="user-section">
                         <div class="inquiry-header mb-4">
                             <div>
@@ -687,6 +692,28 @@
                                 </button>
                             </div>
                         </div>
+                        
+                        <form action="{{ url_for('admin.products') }}" method="GET" class="mb-3">
+                            <input type="hidden" name="tab" value="products">
+
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+
+                                <input type="text" name="search" class="form-control border-start-0 shadow-none"
+                                    placeholder="Search product name..." value="{{ search_val if search_val else '' }}">
+
+                                <button type="submit" class="btn btn-success rounded-end-pill px-4">Search</button>
+
+                                {% if search_val %}
+                                <a href="{{ url_for('admin.products', tab='products') }}"
+                                    class="btn btn-outline-secondary ms-2 rounded-pill">
+                                    Clear
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
                         <div class="modal fade" id="addCategoryModal" tabindex="-1">
                             <div class="modal-dialog modal-sm modal-dialog-centered">
                                 <div class="modal-content">
@@ -891,6 +918,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr id="noResultsRow" class="d-none">
+                                        <td colspan="8" class="text-center text-muted py-5">
+                                            <i class="bi bi-search display-6 d-block mb-2"></i>
+                                            No products match your search.
+                                        </td>
+                                    </tr>
                                     {% for product in products %}
                                     <tr>
                                         <td>{{ product.id }}</td>
@@ -996,7 +1029,7 @@
                                                         <div class="mb-3">
                                                             <label class="form-label">Price</label>
                                                             <input type="text" name="price" class="form-control"
-                                                                value="{{ "%.2f"|format(product.price) }}"
+                                                                value="{{ " %.2f"|format(product.price) }}"
                                                                 placeholder="0.00" pattern="[0-9]*\.?[0-9]{0,2}"
                                                                 title="Please enter a valid price (e.g 9.99)" required>
                                                         </div>
@@ -1558,230 +1591,230 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // ==========================================
-    // 1. Validation & Utility Logic
-    // ==========================================
-    function validateStockStatus(input) {
-        let stock = input.value;
-        if (stock <= 0) { console.log("Status: Out of Stock"); }
-    }
+    <script>
+        // ==========================================
+        // 1. Validation & Utility Logic
+        // ==========================================
+        function validateStockStatus(input) {
+            let stock = input.value;
+            if (stock <= 0) { console.log("Status: Out of Stock"); }
+        }
 
-    /**
-     * Handles image previews for both File Uploads and Text URLs
-     */
-    function previewImageFile(input, previewId, iconId) {
-        const preview = document.getElementById(previewId);
-        const icon = document.getElementById(iconId);
-        if (!preview || !icon) return;
+        /**
+         * Handles image previews for both File Uploads and Text URLs
+         */
+        function previewImageFile(input, previewId, iconId) {
+            const preview = document.getElementById(previewId);
+            const icon = document.getElementById(iconId);
+            if (!preview || !icon) return;
 
-        // Case A: User selected a file from computer
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-                preview.classList.remove('d-none');
-                icon.classList.add('d-none');
-            };
-            reader.readAsDataURL(input.files[0]);
-        } 
-        // Case B: User typed a URL (or existing value)
-        else if (input.value && input.value.trim() !== "") {
-            // Determine if it's a relative static path or full URL
-            const src = input.value.startsWith('http') ? input.value : "/static/image/" + input.value;
-            preview.src = src;
-            
-            preview.onload = function () {
-                preview.classList.remove('d-none');
-                icon.classList.add('d-none');
-            };
-            preview.onerror = function () {
+            // Case A: User selected a file from computer
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    icon.classList.add('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+            // Case B: User typed a URL (or existing value)
+            else if (input.value && input.value.trim() !== "") {
+                // Determine if it's a relative static path or full URL
+                const src = input.value.startsWith('http') ? input.value : "/static/image/" + input.value;
+                preview.src = src;
+
+                preview.onload = function () {
+                    preview.classList.remove('d-none');
+                    icon.classList.add('d-none');
+                };
+                preview.onerror = function () {
+                    preview.classList.add('d-none');
+                    icon.classList.remove('d-none');
+                    icon.className = "bi bi-file-earmark-x text-danger fs-4";
+                };
+            }
+            // Case C: Empty
+            else {
                 preview.classList.add('d-none');
                 icon.classList.remove('d-none');
-                icon.className = "bi bi-file-earmark-x text-danger fs-4";
-            };
-        } 
-        // Case C: Empty
-        else {
-            preview.classList.add('d-none');
-            icon.classList.remove('d-none');
-            icon.className = "bi bi-image text-muted fs-4";
-        }
-    }
-
-    function handleTableImageError(imgElement, iconId) {
-        const icon = document.getElementById(iconId);
-        imgElement.classList.add('d-none');
-        if (icon) {
-            icon.classList.remove('d-none');
-            icon.className = "bi bi-file-earmark-x text-danger fs-4";
-        }
-    }
-
-    // ==========================================
-    // 2. Navigation & Dashboard Logic (CRITICAL FIXES HERE)
-    // ==========================================
-    function showAdminSection(event, sectionId) {
-        if (event) event.preventDefault();
-        
-        // Hide all sections
-        document.querySelectorAll('.user-section, .admin-section').forEach(section => {
-            section.style.display = 'none';
-            section.classList.remove('active');
-        });
-
-        // Show target section
-        const target = document.getElementById(sectionId);
-        if (target) {
-            target.style.display = 'block';
-            target.classList.add('active');
-        }
-
-        // Update Sidebar styling
-        document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); });
-        if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
-        
-        // Update URL hash safely
-        history.pushState(null, null, '#' + sectionId);
-        window.scrollTo(0, 0);
-
-        // Initialize Charts ONLY if Analytics is selected
-        if (sectionId === 'analytics') {
-            setTimeout(initCharts, 100);
-        }
-
-        return false;
-    }
-
-    function updateAccountLinkState() {
-        const accountLink = document.getElementById('accountLink');
-        const userRole = localStorage.getItem('userRole');
-        if (accountLink) {
-            if (userRole === 'admin') {
-                accountLink.textContent = 'Admin Panel';
-                accountLink.href = '/admin/dashboard';
-                accountLink.classList.add('active');
-            } else {
-                accountLink.textContent = 'Account';
-                accountLink.href = '/account';
+                icon.className = "bi bi-image text-muted fs-4";
             }
         }
-    }
 
-    function refreshDashboardData() {
-        // Optimize: Only refresh if Dashboard or Analytics tab is actually visible
-        const dashboardTab = document.getElementById('dashboard');
-        const analyticsTab = document.getElementById('analytics');
-        
-        const isDashboardVisible = dashboardTab && dashboardTab.style.display !== 'none';
-        const isAnalyticsVisible = analyticsTab && analyticsTab.style.display !== 'none';
+        function handleTableImageError(imgElement, iconId) {
+            const icon = document.getElementById(iconId);
+            imgElement.classList.add('d-none');
+            if (icon) {
+                icon.classList.remove('d-none');
+                icon.className = "bi bi-file-earmark-x text-danger fs-4";
+            }
+        }
 
-        if (!isDashboardVisible && !isAnalyticsVisible) return;
+        // ==========================================
+        // 2. Navigation & Dashboard Logic (CRITICAL FIXES HERE)
+        // ==========================================
+        function showAdminSection(event, sectionId) {
+            if (event) event.preventDefault();
 
-        fetch('/admin/api/products')
-            .then(response => response.json())
-            .then(data => {
-                if (data.stats) {
-                    // --- SAFE UPDATES (Prevents JS Crash if element is missing) ---
-                    const safeSetText = (id, text) => {
-                        const el = document.getElementById(id);
-                        if (el) el.innerText = text;
-                    };
+            // Hide all sections
+            document.querySelectorAll('.user-section, .admin-section').forEach(section => {
+                section.style.display = 'none';
+                section.classList.remove('active');
+            });
 
-                    // Dashboard Tab
-                    safeSetText('sync-display', data.stats.sync_time);
-                    safeSetText('live-alert-count', data.stats.active_alerts_count);
-                    safeSetText('live-total-orders', data.stats.total_orders_count);
-                    safeSetText('live-total-sales', data.stats.total_sales_value);
-                    safeSetText('live-total-profit', data.stats.total_profit_value);
-                    safeSetText('live-total-commissions', data.stats.total_commissions);
+            // Show target section
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.style.display = 'block';
+                target.classList.add('active');
+            }
 
-                    // Analytics Tab
-                    if(document.getElementById('totalSalesAmount')) 
-                        document.getElementById('totalSalesAmount').innerText = '$' + data.stats.total_sales_value;
-                    safeSetText('activeCoupons', data.stats.active_coupons_count);
+            // Update Sidebar styling
+            document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); });
+            if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
+
+            // Update URL hash safely
+            history.pushState(null, null, '#' + sectionId);
+            window.scrollTo(0, 0);
+
+            // Initialize Charts ONLY if Analytics is selected
+            if (sectionId === 'analytics') {
+                setTimeout(initCharts, 100);
+            }
+
+            return false;
+        }
+
+        function updateAccountLinkState() {
+            const accountLink = document.getElementById('accountLink');
+            const userRole = localStorage.getItem('userRole');
+            if (accountLink) {
+                if (userRole === 'admin') {
+                    accountLink.textContent = 'Admin Panel';
+                    accountLink.href = '/admin/dashboard';
+                    accountLink.classList.add('active');
+                } else {
+                    accountLink.textContent = 'Account';
+                    accountLink.href = '/account';
                 }
+            }
+        }
 
-                // Update Product Table (Rows might exist on Products tab)
-                (data.products || []).forEach(p => {
-                    const qtyCell = document.getElementById(`qty-${p.id}`);
-                    if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
-                    
-                    const badge = document.getElementById(`status-${p.id}`);
-                    if (badge) {
-                        badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
-                        badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
+        function refreshDashboardData() {
+            // Optimize: Only refresh if Dashboard or Analytics tab is actually visible
+            const dashboardTab = document.getElementById('dashboard');
+            const analyticsTab = document.getElementById('analytics');
+
+            const isDashboardVisible = dashboardTab && dashboardTab.style.display !== 'none';
+            const isAnalyticsVisible = analyticsTab && analyticsTab.style.display !== 'none';
+
+            if (!isDashboardVisible && !isAnalyticsVisible) return;
+
+            fetch('/admin/api/products')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.stats) {
+                        // --- SAFE UPDATES (Prevents JS Crash if element is missing) ---
+                        const safeSetText = (id, text) => {
+                            const el = document.getElementById(id);
+                            if (el) el.innerText = text;
+                        };
+
+                        // Dashboard Tab
+                        safeSetText('sync-display', data.stats.sync_time);
+                        safeSetText('live-alert-count', data.stats.active_alerts_count);
+                        safeSetText('live-total-orders', data.stats.total_orders_count);
+                        safeSetText('live-total-sales', data.stats.total_sales_value);
+                        safeSetText('live-total-profit', data.stats.total_profit_value);
+                        safeSetText('live-total-commissions', data.stats.total_commissions);
+
+                        // Analytics Tab
+                        if (document.getElementById('totalSalesAmount'))
+                            document.getElementById('totalSalesAmount').innerText = '$' + data.stats.total_sales_value;
+                        safeSetText('activeCoupons', data.stats.active_coupons_count);
                     }
-                });
+
+                    // Update Product Table (Rows might exist on Products tab)
+                    (data.products || []).forEach(p => {
+                        const qtyCell = document.getElementById(`qty-${p.id}`);
+                        if (qtyCell) qtyCell.innerText = `${p.available_qty} units`;
+
+                        const badge = document.getElementById(`status-${p.id}`);
+                        if (badge) {
+                            badge.innerText = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'Out of Stock' : p.status;
+                            badge.className = (p.available_qty <= 0 || p.status === 'Out of Stock') ? 'badge bg-danger' : 'badge bg-success';
+                        }
+                    });
+                })
+                .catch(err => console.log("Sync paused (network/parsing):", err));
+        }
+        // Refresh every 5 seconds
+        setInterval(refreshDashboardData, 5000);
+
+        // ==========================================
+        // 3. Marketing Campaign Logic
+        // ==========================================
+        let currentDiscount = 0;
+
+        function handleCampaignChange() {
+            const typeEl = document.getElementById('campaignType');
+            if (!typeEl) return;
+
+            const type = typeEl.value;
+            const productWrapper = document.getElementById('targetProductWrapper');
+            const customWrapper = document.getElementById('customGoalWrapper');
+
+            if (type === 'all') { productWrapper?.classList.add('d-none'); }
+            else { productWrapper?.classList.remove('d-none'); }
+
+            if (type === 'custom') { customWrapper?.classList.remove('d-none'); }
+            else { customWrapper?.classList.add('d-none'); }
+        }
+
+        function analyzeAudience() {
+            const cType = document.getElementById('campaignType').value;
+            const pIdSelect = document.getElementById('campaignProduct');
+            const customInput = document.getElementById('customGoalInput').value;
+            const btn = document.getElementById('analyzeBtn');
+            const messageArea = document.getElementById('uiMessage');
+
+            let pId = (cType === 'all') ? 'all' : pIdSelect.value;
+
+            if (cType !== 'custom' && cType !== 'all' && (!pId || pId === '')) {
+                alert("Please select a target product!"); return;
+            }
+            if (cType === 'custom' && !customInput.trim()) {
+                alert("Please type your custom goal!"); return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI is writing...';
+            document.getElementById('campaignDraft').classList.remove('d-none');
+
+            const existingAlert = document.querySelector('.promo-success-alert');
+            if (existingAlert) existingAlert.remove();
+
+            messageArea.value = "Consulting ChatGPT...";
+
+            fetch('/admin/campaign/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: pId, campaign_type: cType, custom_goal: customInput })
             })
-            .catch(err => console.log("Sync paused (network/parsing):", err));
-    }
-    // Refresh every 5 seconds
-    setInterval(refreshDashboardData, 5000);
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    window.targetProductId = pId;
 
-    // ==========================================
-    // 3. Marketing Campaign Logic
-    // ==========================================
-    let currentDiscount = 0;
+                    let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
+                    document.getElementById('uiTriggers').innerText = audienceLabel;
 
-    function handleCampaignChange() {
-        const typeEl = document.getElementById('campaignType');
-        if (!typeEl) return;
-        
-        const type = typeEl.value;
-        const productWrapper = document.getElementById('targetProductWrapper');
-        const customWrapper = document.getElementById('customGoalWrapper');
+                    const statusLabel = document.getElementById('draftStatus');
 
-        if (type === 'all') { productWrapper?.classList.add('d-none'); }
-        else { productWrapper?.classList.remove('d-none'); }
-
-        if (type === 'custom') { customWrapper?.classList.remove('d-none'); }
-        else { customWrapper?.classList.add('d-none'); }
-    }
-
-    function analyzeAudience() {
-        const cType = document.getElementById('campaignType').value;
-        const pIdSelect = document.getElementById('campaignProduct');
-        const customInput = document.getElementById('customGoalInput').value;
-        const btn = document.getElementById('analyzeBtn');
-        const messageArea = document.getElementById('uiMessage');
-
-        let pId = (cType === 'all') ? 'all' : pIdSelect.value;
-
-        if (cType !== 'custom' && cType !== 'all' && (!pId || pId === '')) {
-            alert("Please select a target product!"); return;
-        }
-        if (cType === 'custom' && !customInput.trim()) {
-            alert("Please type your custom goal!"); return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI is writing...';
-        document.getElementById('campaignDraft').classList.remove('d-none');
-
-        const existingAlert = document.querySelector('.promo-success-alert');
-        if (existingAlert) existingAlert.remove();
-
-        messageArea.value = "Consulting ChatGPT...";
-
-        fetch('/admin/campaign/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: pId, campaign_type: cType, custom_goal: customInput })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) throw new Error(data.error);
-            window.targetProductId = pId;
-
-            let audienceLabel = (pId === 'all') ? "ALL CUSTOMERS" : (data.triggers || "Selected Product Buyers");
-            document.getElementById('uiTriggers').innerText = audienceLabel;
-
-            const statusLabel = document.getElementById('draftStatus');
-
-            if (data.promo_code && data.promo_code !== "null") {
-                currentDiscount = data.discount_percent || 0;
-                const alertHtml = `
+                    if (data.promo_code && data.promo_code !== "null") {
+                        currentDiscount = data.discount_percent || 0;
+                        const alertHtml = `
                 <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mt-3 promo-success-alert" role="alert">
                     <i class="bi bi-magic me-2 fs-4"></i>
                     <div>
@@ -1791,177 +1824,177 @@
                         <small>Edit the code in the text box below to update this.</small>
                     </div>
                 </div>`;
-                messageArea.insertAdjacentHTML('beforebegin', alertHtml);
-                statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
-            } else {
-                currentDiscount = 0;
-                statusLabel.innerText = "AI Generated (No Code)";
-            }
-
-            let finalMessage = data.message;
-            if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
-                finalMessage += `\n\nUse promo code: ${data.promo_code}`;
-            }
-
-            messageArea.value = finalMessage;
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
-        })
-        .catch(error => {
-            console.error(error);
-            btn.disabled = false;
-            btn.innerHTML = 'Try Again';
-            alert("Error generating draft: " + error.message);
-        });
-    }
-
-    // Live Text Listener for Promo Codes
-    const uiMessageEl = document.getElementById('uiMessage');
-    if (uiMessageEl) {
-        uiMessageEl.addEventListener('input', function (e) {
-            const text = e.target.value;
-            const badge = document.getElementById('liveCodeBadge');
-            let bestCode = "";
-
-            if (badge) {
-                const contextMatch = text.match(/(?:use\s+code|promo\s+code|code)\s+([a-zA-Z0-9]+)/i);
-                if (contextMatch && contextMatch[1]) {
-                    bestCode = contextMatch[1];
-                } else {
-                    const potentialCodes = text.match(/\b[a-zA-Z0-9]{3,}\b/g) || [];
-                    const likelyCodes = potentialCodes.filter(word => {
-                        const hasNumber = /\d/.test(word);
-                        const isAllCaps = /^[A-Z0-9]+$/.test(word);
-                        return hasNumber || isAllCaps;
-                    });
-                    if (likelyCodes.length > 0) {
-                        bestCode = likelyCodes[likelyCodes.length - 1];
+                        messageArea.insertAdjacentHTML('beforebegin', alertHtml);
+                        statusLabel.innerHTML = '<span class="text-success fw-bold">Draft Ready ✅</span>';
+                    } else {
+                        currentDiscount = 0;
+                        statusLabel.innerText = "AI Generated (No Code)";
                     }
-                }
 
-                if (bestCode) {
-                    badge.innerText = bestCode;
-                    // Auto-update discount variable based on numbers found in code (e.g. SAVE20 -> 20%)
-                    const discountMatch = bestCode.match(/(\d+)$/);
-                    if (discountMatch) {
-                        const extractedNum = parseInt(discountMatch[1]);
-                        if (extractedNum > 0 && extractedNum <= 100) {
-                            currentDiscount = extractedNum;
+                    let finalMessage = data.message;
+                    if (data.promo_code && data.promo_code !== "null" && !finalMessage.includes(data.promo_code)) {
+                        finalMessage += `\n\nUse promo code: ${data.promo_code}`;
+                    }
+
+                    messageArea.value = finalMessage;
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-robot me-2"></i>Regenerate Draft';
+                })
+                .catch(error => {
+                    console.error(error);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Try Again';
+                    alert("Error generating draft: " + error.message);
+                });
+        }
+
+        // Live Text Listener for Promo Codes
+        const uiMessageEl = document.getElementById('uiMessage');
+        if (uiMessageEl) {
+            uiMessageEl.addEventListener('input', function (e) {
+                const text = e.target.value;
+                const badge = document.getElementById('liveCodeBadge');
+                let bestCode = "";
+
+                if (badge) {
+                    const contextMatch = text.match(/(?:use\s+code|promo\s+code|code)\s+([a-zA-Z0-9]+)/i);
+                    if (contextMatch && contextMatch[1]) {
+                        bestCode = contextMatch[1];
+                    } else {
+                        const potentialCodes = text.match(/\b[a-zA-Z0-9]{3,}\b/g) || [];
+                        const likelyCodes = potentialCodes.filter(word => {
+                            const hasNumber = /\d/.test(word);
+                            const isAllCaps = /^[A-Z0-9]+$/.test(word);
+                            return hasNumber || isAllCaps;
+                        });
+                        if (likelyCodes.length > 0) {
+                            bestCode = likelyCodes[likelyCodes.length - 1];
+                        }
+                    }
+
+                    if (bestCode) {
+                        badge.innerText = bestCode;
+                        // Auto-update discount variable based on numbers found in code (e.g. SAVE20 -> 20%)
+                        const discountMatch = bestCode.match(/(\d+)$/);
+                        if (discountMatch) {
+                            const extractedNum = parseInt(discountMatch[1]);
+                            if (extractedNum > 0 && extractedNum <= 100) {
+                                currentDiscount = extractedNum;
+                            }
                         }
                     }
                 }
-            }
-        });
-    }
-
-    function launchCampaign() {
-        const modalEl = document.getElementById('campaignConfirmModal');
-        if(modalEl) {
-            const confirmModal = new bootstrap.Modal(modalEl);
-            confirmModal.show();
+            });
         }
-    }
 
-    function executeFinalCampaignSend() {
-        const launchBtn = document.getElementById('launchBtn');
-        const finalMessage = document.getElementById('uiMessage').value;
-        const confirmModalInstance = bootstrap.Modal.getInstance(document.getElementById('campaignConfirmModal'));
-        if(confirmModalInstance) confirmModalInstance.hide();
+        function launchCampaign() {
+            const modalEl = document.getElementById('campaignConfirmModal');
+            if (modalEl) {
+                const confirmModal = new bootstrap.Modal(modalEl);
+                confirmModal.show();
+            }
+        }
 
-        let finalCode = null;
-        const badge = document.getElementById('liveCodeBadge');
-        if (badge) { finalCode = badge.innerText.trim(); }
+        function executeFinalCampaignSend() {
+            const launchBtn = document.getElementById('launchBtn');
+            const finalMessage = document.getElementById('uiMessage').value;
+            const confirmModalInstance = bootstrap.Modal.getInstance(document.getElementById('campaignConfirmModal'));
+            if (confirmModalInstance) confirmModalInstance.hide();
 
-        launchBtn.disabled = true;
-        launchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+            let finalCode = null;
+            const badge = document.getElementById('liveCodeBadge');
+            if (badge) { finalCode = badge.innerText.trim(); }
 
-        fetch('/admin/campaign/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                product_id: window.targetProductId,
-                message: finalMessage,
-                promo_code: finalCode,
-                discount_percent: currentDiscount
+            launchBtn.disabled = true;
+            launchBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+            fetch('/admin/campaign/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    product_id: window.targetProductId,
+                    message: finalMessage,
+                    promo_code: finalCode,
+                    discount_percent: currentDiscount
+                })
             })
-        })
-        .then(res => res.json())
-        .then(data => {
-            const count = (data.sent_count !== undefined) ? data.sent_count : 0;
-            document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
-            new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
-        })
-        .catch(err => {
-            alert("Send failed.");
-        })
-        .finally(() => {
-            launchBtn.disabled = false;
-            launchBtn.innerHTML = 'Launch Campaign';
-        });
-    }
-
-    // ==========================================
-    // 4. Analytics & Charts Logic
-    // ==========================================
-    let salesChartInstance = null;
-    let topSellingChartInstance = null;
-
-    function initCharts() {
-        const canvasSales = document.getElementById('salesChart');
-        const canvasTop = document.getElementById('topSellingChart');
-
-        // Check if elements exist (Crucial fix for Add Leader page crash)
-        if (!canvasSales || !canvasTop) return;
-
-        const ctxSales = canvasSales.getContext('2d');
-        const ctxTop = canvasTop.getContext('2d');
-        
-        const timeFilterEl = document.getElementById('analyticsTimeFilter');
-        const timeFilter = timeFilterEl ? timeFilterEl.value : 'week';
-
-        fetch(`/admin/api/analytics?period=${timeFilter}`)
-            .then(response => response.json())
-            .then(data => {
-                // A. Update Sales Chart
-                if (salesChartInstance) salesChartInstance.destroy();
-                salesChartInstance = new Chart(ctxSales, {
-                    type: 'line',
-                    data: {
-                        labels: data.sales.labels, 
-                        datasets: [{
-                            label: 'Revenue ($)',
-                            data: data.sales.data, 
-                            borderColor: '#198754',
-                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
+                .then(res => res.json())
+                .then(data => {
+                    const count = (data.sent_count !== undefined) ? data.sent_count : 0;
+                    document.getElementById('successDetailText').innerText = `Success! Message sent to ${count} customers.`;
+                    new bootstrap.Modal(document.getElementById('campaignSuccessModal')).show();
+                })
+                .catch(err => {
+                    alert("Send failed.");
+                })
+                .finally(() => {
+                    launchBtn.disabled = false;
+                    launchBtn.innerHTML = 'Launch Campaign';
                 });
+        }
 
-                // B. Update Top Products Chart
-                if (topSellingChartInstance) topSellingChartInstance.destroy();
-                topSellingChartInstance = new Chart(ctxTop, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.top_products.labels,
-                        datasets: [{
-                            data: data.top_products.data,
-                            backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
+        // ==========================================
+        // 4. Analytics & Charts Logic
+        // ==========================================
+        let salesChartInstance = null;
+        let topSellingChartInstance = null;
 
-                // C. Update Demand Table
-                const demandTable = document.getElementById('analyticsDemandTable');
-                if (demandTable) {
-                    demandTable.innerHTML = '';
-                    if (data.demand && data.demand.length > 0) {
-                        data.demand.forEach(item => {
-                            demandTable.innerHTML += `
+        function initCharts() {
+            const canvasSales = document.getElementById('salesChart');
+            const canvasTop = document.getElementById('topSellingChart');
+
+            // Check if elements exist (Crucial fix for Add Leader page crash)
+            if (!canvasSales || !canvasTop) return;
+
+            const ctxSales = canvasSales.getContext('2d');
+            const ctxTop = canvasTop.getContext('2d');
+
+            const timeFilterEl = document.getElementById('analyticsTimeFilter');
+            const timeFilter = timeFilterEl ? timeFilterEl.value : 'week';
+
+            fetch(`/admin/api/analytics?period=${timeFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    // A. Update Sales Chart
+                    if (salesChartInstance) salesChartInstance.destroy();
+                    salesChartInstance = new Chart(ctxSales, {
+                        type: 'line',
+                        data: {
+                            labels: data.sales.labels,
+                            datasets: [{
+                                label: 'Revenue ($)',
+                                data: data.sales.data,
+                                borderColor: '#198754',
+                                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+
+                    // B. Update Top Products Chart
+                    if (topSellingChartInstance) topSellingChartInstance.destroy();
+                    topSellingChartInstance = new Chart(ctxTop, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.top_products.labels,
+                            datasets: [{
+                                data: data.top_products.data,
+                                backgroundColor: ['#198754', '#20c997', '#ffc107', '#fd7e14', '#6c757d'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+
+                    // C. Update Demand Table
+                    const demandTable = document.getElementById('analyticsDemandTable');
+                    if (demandTable) {
+                        demandTable.innerHTML = '';
+                        if (data.demand && data.demand.length > 0) {
+                            data.demand.forEach(item => {
+                                demandTable.innerHTML += `
                                 <tr>
                                     <td class="ps-3 fw-bold text-dark">${item.name}</td>
                                     <td class="text-end pe-3">
@@ -1970,99 +2003,137 @@
                                         </span>
                                     </td>
                                 </tr>`;
-                        });
+                            });
+                        } else {
+                            demandTable.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>No active stock alerts.</td></tr>`;
+                        }
+                    }
+                })
+                .catch(err => console.error("Error loading analytics:", err));
+        }
+
+
+        // ==========================================
+        // 5. Initial Load & AI Features
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', function () {
+            updateAccountLinkState();
+            handleCampaignChange();
+
+            // Setup Delete User Modals
+            const deleteUserModal = document.getElementById('deleteUserModal');
+            if (deleteUserModal) {
+                deleteUserModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    document.getElementById('deleteUserName').textContent = button.getAttribute('data-username');
+                    document.getElementById('confirmDeleteForm').setAttribute('action', button.getAttribute('data-url'));
+                });
+            }
+
+            // Activate Correct Tab from URL Hash or Query Param
+            let activeId = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get('tab') || 'dashboard';
+
+            // Clean the ID string (remove &refresh=true etc)
+            activeId = activeId.split('&')[0].split('?')[0];
+
+            // Verify ID exists, fallback to dashboard
+            if (!document.getElementById(activeId)) activeId = 'dashboard';
+
+            showAdminSection(null, activeId);
+        });
+
+        function updateLiveClock() {
+            const now = new Date();
+            const options = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Singapore' };
+            if (document.getElementById('live-clock')) document.getElementById('live-clock').innerText = now.toLocaleString('en-GB', options);
+        }
+        setInterval(updateLiveClock, 1000);
+
+        function generateAIDescription(btn) {
+            // Find inputs relative to the button (works for Add and Edit modals)
+            const modal = btn.closest('.modal-content');
+            const nameInput = modal.querySelector('input[name="name"]');
+            const categorySelect = modal.querySelector('select[name="category"]');
+            const descriptionTextarea = modal.querySelector('textarea[name="description"]');
+            const loader = modal.querySelector('.ai-loader');
+
+            const productName = nameInput.value;
+            const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+
+            if (!productName || categorySelect.value === "") {
+                alert("Please fill in the Product Name and Category first.");
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+            if (loader) loader.classList.remove('d-none');
+
+            fetch('/admin/generate-description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: productName,
+                    category: categoryName
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.description) {
+                        descriptionTextarea.value = data.description;
                     } else {
-                        demandTable.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>No active stock alerts.</td></tr>`;
+                        alert("AI Error: " + (data.error || "Could not generate text"));
+                    }
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    alert("Failed to connect to the AI service.");
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    if (loader) loader.classList.add('d-none');
+                });
+        }
+        // --- 6. LIVE SEARCH FILTERING ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('liveSearchInput');
+            const tableBody = document.querySelector('tbody');
+            const tableRows = tableBody.getElementsByTagName('tr');
+
+            searchInput.addEventListener('keyup', function () {
+                const searchTerm = this.value.toLowerCase().trim();
+
+                for (let i = 0; i < tableRows.length; i++) {
+                    const row = tableRows[i];
+
+                    // Get text from specific columns: Name (index 2) and Category (index 3)
+                    // Indices: 0=ID, 1=Image, 2=Name, 3=Category, 4=Stock, etc.
+                    const productName = row.cells[2].textContent.toLowerCase();
+                    const category = row.cells[3].textContent.toLowerCase();
+
+                    // Check if term exists in Name OR Category
+                    if (productName.includes(searchTerm) || category.includes(searchTerm)) {
+                        row.style.display = ""; // Show
+                    } else {
+                        row.style.display = "none"; // Hide
                     }
                 }
-            })
-            .catch(err => console.error("Error loading analytics:", err));
-    }
-
-
-    // ==========================================
-    // 5. Initial Load & AI Features
-    // ==========================================
-    window.addEventListener('DOMContentLoaded', function () {
-        updateAccountLinkState();
-        handleCampaignChange();
-
-        // Setup Delete User Modals
-        const deleteUserModal = document.getElementById('deleteUserModal');
-        if (deleteUserModal) {
-            deleteUserModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                document.getElementById('deleteUserName').textContent = button.getAttribute('data-username');
-                document.getElementById('confirmDeleteForm').setAttribute('action', button.getAttribute('data-url'));
             });
-        }
-
-        // Activate Correct Tab from URL Hash or Query Param
-        let activeId = window.location.hash.substring(1) || new URLSearchParams(window.location.search).get('tab') || 'dashboard';
-        
-        // Clean the ID string (remove &refresh=true etc)
-        activeId = activeId.split('&')[0].split('?')[0];
-
-        // Verify ID exists, fallback to dashboard
-        if (!document.getElementById(activeId)) activeId = 'dashboard';
-        
-        showAdminSection(null, activeId);
-    });
-
-    function updateLiveClock() {
-        const now = new Date();
-        const options = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Singapore' };
-        if (document.getElementById('live-clock')) document.getElementById('live-clock').innerText = now.toLocaleString('en-GB', options);
-    }
-    setInterval(updateLiveClock, 1000);
-
-    function generateAIDescription(btn) {
-        // Find inputs relative to the button (works for Add and Edit modals)
-        const modal = btn.closest('.modal-content');
-        const nameInput = modal.querySelector('input[name="name"]');
-        const categorySelect = modal.querySelector('select[name="category"]');
-        const descriptionTextarea = modal.querySelector('textarea[name="description"]');
-        const loader = modal.querySelector('.ai-loader');
-
-        const productName = nameInput.value;
-        const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
-
-        if (!productName || categorySelect.value === "") {
-            alert("Please fill in the Product Name and Category first.");
-            return;
-        }
-
-        btn.disabled = true;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
-        if (loader) loader.classList.remove('d-none');
-
-        fetch('/admin/generate-description', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: productName,
-                category: categoryName
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.description) {
-                descriptionTextarea.value = data.description;
-            } else {
-                alert("AI Error: " + (data.error || "Could not generate text"));
-            }
-        })
-        .catch(err => {
-            console.error("Fetch Error:", err);
-            alert("Failed to connect to the AI service.");
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            if (loader) loader.classList.add('d-none');
         });
-    }
-</script>
+        const noResultsRow = document.getElementById('noResultsRow');
+        const visibleRows = Array.from(tableRows).filter(row =>
+            row.id !== 'noResultsRow' && row.style.display !== 'none'
+        );
+
+        if (visibleRows.length === 0) {
+            noResultsRow.classList.remove('d-none');
+        } else {
+            noResultsRow.classList.add('d-none');
+        }
+
+    </script>
 </body>
+
 </html>

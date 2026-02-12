@@ -287,6 +287,39 @@ def delete_product(id):
         
     return redirect(url_for('admin.dashboard', tab='products'))
 
+#SEARCH BAR
+@admin_bp.route("/products")
+def products():
+    # 1. SEARCH LOGIC
+    search_query = request.args.get('search', '').strip()
+    query = Product.query
+    if search_query:
+        query = query.filter(Product.name.ilike(f"%{search_query}%"))
+    
+    products = query.order_by(Product.id.desc()).all()
+    categories = Category.query.all()
+
+    # 2. FIX THE ERROR: Fetch the missing variables for the template
+    # These are needed because admin.html tries to display them in the stats bar
+    total_sales_value = db.session.query(func.sum(WhatsAppOrder.total_price)).scalar() or 0.0
+    total_orders_count = WhatsAppOrder.query.count()
+    active_alerts_count = StockAlert.query.filter_by(is_notified=False).count()
+    
+    # Add any other variables that admin.html uses (e.g., total_profit_value, inquiries, etc.)
+    total_profit_value = total_sales_value * 0.30
+    customers = Customer.query.order_by(Customer.id.desc()).all()
+
+    # 3. Pass EVERYTHING to the template
+    return render_template('admin.html', 
+                           products=products, 
+                           search_val=search_query,
+                           categories=categories,
+                           total_sales_value=total_sales_value,  # This fixes the crash
+                           total_orders_count=total_orders_count,
+                           active_alerts_count=active_alerts_count,
+                           total_profit_value=total_profit_value,
+                           customers=customers)
+                         
 # --- CATEGORY MANAGEMENT ---
 @admin_bp.route("/categories/add", methods=['POST'])
 def add_category():
@@ -340,6 +373,7 @@ def generate_description():
         return jsonify({"description": ai_description})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # --- MARKETING CAMPAIGN ENGINE ---
 @admin_bp.route('/campaign/analyze', methods=['POST'])
