@@ -147,21 +147,22 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3"
-                                        type="button"
-                                        data-id="{{ order.id }}"
-                                        data-name="{{ order.buyer.name }}"
-                                        data-phone="{{ order.customer_phone }}"
-                                        data-street="{{ order.buyer.street_address or '' }}"
-                                        data-unit="{{ order.buyer.unit_number or '' }}"
-                                        data-postal="{{ order.buyer.postal_code or '' }}"
-                                        data-product="{{ order.product_name }}"
-                                        data-qty="{{ order.quantity }}"
-                                        data-price="{{ order.total_price }}"
-                                        data-status="{{ order.order_status }}"
-                                        onclick="openOrderModal(this)">
-                                        <i class="bi bi-eye-fill me-1"></i> View
-                                    </button>
+                                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3" type="button"
+                                    data-id="{{ order.id }}"
+                                    data-name="{{ order.buyer.name }}"
+                                    data-phone="{{ order.customer_phone }}"
+                                    
+                                    data-street="{{ order.delivery_address or order.buyer.street_address }}"
+                                    data-unit="{{ order.delivery_unit or order.buyer.unit_number }}"
+                                    data-postal="{{ order.delivery_postal or order.buyer.postal_code }}"
+                                    
+                                    data-product="{{ order.product_name }}"
+                                    data-qty="{{ order.quantity }}"
+                                    data-price="{{ order.total_price }}"
+                                    data-status="{{ order.order_status }}"
+                                    onclick="openOrderModal(this)">
+                                    <i class="bi bi-eye-fill me-1"></i> View
+                                </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -436,17 +437,17 @@
         const priceNum = parseFloat(price);
         document.getElementById('modalPrice').textContent = "$" + (isNaN(priceNum) ? "0.00" : priceNum.toFixed(2));
 
-        // 5. Address Logic
-        const hasAddress = (street && street !== 'None') || (postal && postal !== 'None');
-        
+        const hasAddress = (street && street !== 'None' && street !== '') || 
+                      (postal && postal !== 'None' && postal !== '');
+    
         if (hasAddress) {
-            document.getElementById('modalStreet').textContent = (street && street !== 'None') ? street : '';
+            document.getElementById('modalStreet').textContent = street;
             
-            let unitText = (unit && unit !== 'None') ? unit : '';
+            let unitText = (unit && unit !== 'None' && unit !== '') ? unit : '';
             if (unitText && !unitText.startsWith('#')) unitText = '#' + unitText;
             document.getElementById('modalUnit').textContent = unitText;
             
-            document.getElementById('modalPostal').textContent = (postal && postal !== 'None') ? "Singapore " + postal : '';
+            document.getElementById('modalPostal').textContent = (postal) ? "Singapore " + postal : '';
             
             document.getElementById('modalStreet').parentElement.style.display = 'block';
             document.getElementById('noAddressMsg').classList.add('d-none');

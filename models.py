@@ -223,22 +223,67 @@ class Review(db.Model):
     
 def find_leader_by_address(postal_code, street_address):
     """
-    Auto-assigns a leader ID by checking if the Leader's 'Area' 
-    matches the User's Postal Code or Street Name.
+    Comprehensive Singapore Leader Auto-Assignment.
+    Maps 2-digit postal sectors to district names.
     """
-    leaders = GroupLeader.query.filter(GroupLeader.area != None).all()
-    
-    user_sector = str(postal_code).strip()[:2] if postal_code and len(str(postal_code)) >= 2 else ""
+    if not postal_code or len(str(postal_code)) < 2:
+        return None
+
+    user_sector = str(postal_code).strip()[:2]
     user_street = street_address.lower().strip() if street_address else ""
 
+    # 1. THE COMPLETE SINGAPORE SECTOR MAP
+    sector_to_district = {
+        # North & Northeast
+        '72': 'Woodlands', '73': 'Woodlands', 
+        '75': 'Sembawang', '76': 'Yishun', '77': 'Yishun', '78': 'Yishun',
+        '79': 'Seletar', '80': 'Seletar', 
+        '82': 'Punggol', '54': 'Sengkang', '53': 'Hougang', '55': 'Serangoon',
+        '56': 'Ang Mo Kio', '57': 'Ang Mo Kio',
+        
+        # Central & South
+        '01': 'Raffles Place', '02': 'Raffles Place', '03': 'Raffles Place', '04': 'Raffles Place', '05': 'Raffles Place', '06': 'Raffles Place',
+        '07': 'Tanjong Pagar', '08': 'Tanjong Pagar', '09': 'Harbourfront', '10': 'Harbourfront',
+        '14': 'Bukit Merah', '15': 'Bukit Merah', '16': 'Bukit Merah',
+        '17': 'High Street', '18': 'Bugis', '19': 'Bugis',
+        '20': 'Little India', '21': 'Little India',
+        '22': 'Orchard', '23': 'Orchard', '24': 'Tanglin', '25': 'Tanglin', '26': 'Tanglin', '27': 'Tanglin',
+        '28': 'Novena', '29': 'Novena', '30': 'Novena',
+        '31': 'Toa Payoh', '32': 'Toa Payoh', '33': 'Toa Payoh',
+        
+        # East
+        '38': 'Geylang', '39': 'Geylang', '40': 'Geylang', '41': 'Geylang',
+        '42': 'Katong', '43': 'Katong', '44': 'Katong', '45': 'Katong',
+        '46': 'Bedok', '47': 'Bedok', '48': 'Bedok', 
+        '49': 'Changi', '50': 'Changi', '81': 'Changi',
+        '51': 'Pasir Ris', '52': 'Tampines',
+        
+        # West
+        '58': 'Bukit Timah', '59': 'Bukit Timah',
+        '60': 'Jurong East', '61': 'Jurong West', '62': 'Jurong West', '63': 'Jurong West', '64': 'Jurong West',
+        '65': 'Bukit Batok', '66': 'Bukit Batok', 
+        '67': 'Bukit Panjang', '68': 'Choa Chu Kang',
+        '69': 'Tengah', '70': 'Tuas', '71': 'Tuas'
+    }
+
+    # 2. Determine target district name
+    target_district = sector_to_district.get(user_sector)
+
+    # 3. Look for a Leader matching the District Name OR the Sector Code
+    leaders = GroupLeader.query.all()
     for leader in leaders:
         admin_area = leader.area.lower().strip()
         
-        if admin_area.isdigit() and len(admin_area) == 2:
-            if user_sector == admin_area:
-                return leader.id
-        
-        elif admin_area in user_street:
+        # Match by District Name (e.g. Leader Area is "Seletar")
+        if target_district and target_district.lower() == admin_area:
+            return leader.id
+            
+        # Match by Sector Digits (e.g. Leader Area is "79")
+        if user_sector == admin_area:
+            return leader.id
+            
+        # Match by Street Name (e.g. Street contains "Ang Mo Kio")
+        if admin_area in user_street:
             return leader.id
             
     return None

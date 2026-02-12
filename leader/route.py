@@ -42,11 +42,7 @@ def dashboard():
                            neighbors=neighbors, 
                            leads=leads, 
                            new_leads_count=len(leads), 
-                           
-                           # 👇 TRICK: We pass 'my_earnings' to the 'total_sales' slot.
-                           # This makes the dashboard display YOUR COMMISSION as the main number.
                            total_sales=my_earnings, 
-                           
                            pending_commission=my_earnings, 
                            today_orders_count=today_count, 
                            active_orders_count=active_count)
