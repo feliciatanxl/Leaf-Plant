@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='footer.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='product.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='recommendations.css') }}">
 </head>
 
 <body>
@@ -71,12 +70,12 @@
                 <div class="col-md-3 px-4 mb-5">
                     
                     <h6 class="fw-bold mb-3" style="letter-spacing: 1px;">SEARCH PRODUCTS:</h6>
-                    <div class="search-box mb-4">
+                    <div class="search-box mb-3">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 rounded-start-pill">
                             <i class="bi bi-search text-muted"></i>
                         </span>
-                        <input type="text" id="liveSearchInput" class="form-control bg-white border-start-0 rounded-end-pill shadow-none" placeholder="Type to filter..." autocomplete="off">
+                        <input type="text" id="liveSearchInput" class="form-control bg-white border-start-0 rounded-end-pill shadow-none" placeholder="Search Products..." autocomplete="off">
                     </div>
                 </div>
 
@@ -102,71 +101,6 @@
                 </div>
 
                 <div class="col-md-9">
-                <div class="recommendations-section mb-4" id="recommendations-section">
-                    <h2 class="text-center">🌱 Recommended for You</h2>
-
-                    {# --- SCENARIO 1: STANDARD USER (Show Slider) --- #}
-                    {% if session.get('user_id') and session.get('user_role') == 'user' %}
-                        
-                        <div id="recommendations-loading" class="recommendations-loading">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-
-                        <div id="slider-container" style="display: none; position: relative; padding: 0 20px;">
-                            <button class="slider-btn prev-btn" onclick="scrollSlider(-1)">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-
-                            <div id="recommendations-grid" class="recommendations-grid">
-                                </div>
-
-                            <button class="slider-btn next-btn" onclick="scrollSlider(1)">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-
-                        <div id="recommendations-empty" class="recommendations-empty" style="display: none;">
-                            <i class="bi bi-inbox"></i>
-                            <p>No recommendations available.</p>
-                        </div>
-                        <div id="recommendations-error" class="recommendations-error" style="display: none;">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            <p>Unable to load recommendations.</p>
-                        </div>
-
-                    {# --- SCENARIO 2: GUEST (Not Logged In) --- #}
-                    {% elif not session.get('user_id') %}
-                        
-                        <div class="text-center py-4 border rounded-4 bg-light shadow-sm mt-3">
-                            <div class="mb-2">
-                                <i class="bi bi-person-lock" style="font-size: 2.5rem; color: #198754;"></i>
-                            </div>
-                            <h5>Personalized just for you!</h5>
-                            <p class="text-muted small px-3">Log in to see product recommendations based on your preferences.</p>
-                            <a href="/account" class="btn btn-success btn-sm px-4 shadow-sm" style="border-radius: 20px;">
-                                Login to View
-                            </a>
-                        </div>
-
-                    {# --- SCENARIO 3: ADMIN or LEADER (Logged In, but not a Customer) --- #}
-                    {% else %}
-                        
-                        <div class="text-center py-4 border rounded-4 bg-light shadow-sm mt-3 opacity-75">
-                            <div class="mb-2">
-                                <i class="bi bi-shield-lock" style="font-size: 2.5rem; color: #6c757d;"></i>
-                            </div>
-                            <h5 class="text-secondary">Staff View Detected</h5>
-                            <p class="text-muted small px-3">Personalized recommendations are disabled for {{ session.get('user_role')|capitalize }} accounts.</p>
-                        </div>
-                        
-
-                    {% endif %}
-                </div>
-                
-            <!-- </div> -->
-
                     <div class="row g-4" id="productGrid">
                         {% for product in products %}
                         <div class="col-md-4 produce-item" data-category="{{ product.category|lower }}">
@@ -267,38 +201,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- 1. SLIDER NAVIGATION LOGIC ---
-        function scrollSlider(direction) {
-            const container = document.getElementById('recommendations-grid');
-            const scrollAmount = 300; // Distance to scroll per click
-            
-            if (container) {
-                if (direction === 1) {
-                    container.scrollLeft += scrollAmount;
-                } else {
-                    container.scrollLeft -= scrollAmount;
-                }
-            }
-        }
-
-        // --- 2. NOTIFICATION HELPER ---
+        // --- Helper Function for Styled Toasts ---
         function showNotification(message, type = 'danger') {
             const toastEl = document.getElementById('stockToast');
             const messageEl = document.getElementById('toastMessage');
             const iconEl = document.getElementById('toastIcon');
             
-            if (!toastEl || !messageEl) return;
-
             messageEl.innerText = message;
             
+            // Set appearance based on type
             if (type === 'danger') {
                 toastEl.classList.remove('bg-success');
                 toastEl.classList.add('bg-danger');
-                if (iconEl) iconEl.className = 'bi bi-exclamation-triangle-fill me-2 fs-5';
+                iconEl.className = 'bi bi-exclamation-triangle-fill me-2 fs-5';
             } else {
                 toastEl.classList.remove('bg-danger');
                 toastEl.classList.add('bg-success');
-                if (iconEl) iconEl.className = 'bi bi-check-circle-fill me-2 fs-5';
+                iconEl.className = 'bi bi-check-circle-fill me-2 fs-5';
             }
             
             const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
@@ -307,7 +226,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- 3. NAVBAR ROLE LOGIC ---
+            // --- 1. Navbar Role Logic ---
             function updateAccountLink() {
                 const accountLink = document.getElementById("accountLink");
                 if (accountLink) {
@@ -323,7 +242,7 @@
             }
             updateAccountLink();
 
-            // --- 4. MODAL & CART SELECTORS ---
+            // --- 2. Selectors ---
             const modal = document.getElementById('product-detail');
             const closeBtn = document.getElementById('close-detail');
             const nameEl = document.getElementById('detail-name');
@@ -336,7 +255,7 @@
             let currentProductId = null;
             let currentQty = 1;
 
-            // --- 5. VIEW DETAILS LOGIC ---
+            // --- 3. View Details Logic ---
             document.addEventListener('click', (e) => {
                 if (e.target.classList.contains('view-detail-btn')) {
                     const item = e.target.closest('.produce-item');
@@ -345,17 +264,19 @@
                     const name = item.querySelector('h5').textContent;
                     const price = item.querySelector('.text-success').textContent;
                     
+                    // Fetch Stock + Status from hidden elements
                     const stockVal = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                     const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
 
                     nameEl.textContent = name;
                     priceEl.textContent = price;
                     const productDesc = document.getElementById('desc-val-' + currentProductId).textContent;
-                    descEl.innerHTML = `<li>${productDesc}</li>`;
+descEl.innerHTML = `<li>${productDesc}</li>`;
                     
                     currentQty = 1;
                     qtyEl.textContent = currentQty;
 
+                    // UPDATED LOGIC: Must be "In Stock" AND have stock > 0
                     if (statusVal === "In Stock" && stockVal > 0) {
                         stockText.textContent = `In Stock: ${stockVal} units available`;
                         stockText.className = "text-success small fw-bold";
@@ -363,6 +284,7 @@
                         addToCartBtn.style.background = "#198754";
                         addToCartBtn.textContent = "Add To Cart";
                     } else {
+                        // Triggers if admin set status to OOS even if stock is 100
                         stockText.textContent = "Currently Out of Stock";
                         stockText.className = "text-danger small fw-bold";
                         addToCartBtn.disabled = true;
@@ -374,21 +296,19 @@
                 }
             });
 
-            if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+            closeBtn.addEventListener('click', () => modal.classList.remove('active'));
             window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 
-            // --- 6. QUANTITY BUTTONS ---
-            const qMinus = document.getElementById("qty-minus");
-            const qPlus = document.getElementById("qty-plus");
-
-            if (qMinus) qMinus.onclick = () => {
+            // --- 4. Quantity Buttons ---
+            document.getElementById("qty-minus").onclick = () => {
                 if (currentQty > 1) { currentQty--; qtyEl.textContent = currentQty; }
             };
 
-            if (qPlus) qPlus.onclick = () => {
+            document.getElementById("qty-plus").onclick = () => {
                 const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                 const statusVal = document.getElementById('status-val-' + currentProductId).textContent.trim();
                 
+                // Block quantity increase if status is OOS
                 if (statusVal === "In Stock" && currentQty < maxStock) { 
                     currentQty++; 
                     qtyEl.textContent = currentQty; 
@@ -399,8 +319,20 @@
                 }
             };
 
-            // --- 7. CART STORAGE LOGIC ---
-            if (addToCartBtn) addToCartBtn.onclick = () => {
+            function handlePublicImageError(imgElement, iconId) {
+            const icon = document.getElementById(iconId);
+            
+            // Completely hide the broken img tag
+            imgElement.classList.add('d-none');
+            
+            // Reveal the professional placeholder icon
+            if (icon) {
+                icon.classList.remove('d-none');
+            }
+        }
+
+            // --- 5. Cart Storage Logic ---
+            addToCartBtn.onclick = () => {
                 if (!currentProductId) return;
                 const maxStock = parseInt(document.getElementById('stock-val-' + currentProductId).textContent);
                 let cart = JSON.parse(localStorage.getItem("farmCart")) || [];
@@ -421,7 +353,14 @@
                 setTimeout(() => { window.location.href = "/orders"; }, 600);
             };
 
-            // --- 8. LIVE SEARCH FILTERING ---
+           
+
+            // --- 7. Scroll Behavior ---
+            const scrollTopBtn = document.getElementById("scrollTopBtn");
+            window.onscroll = () => { scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
+            scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+            // --- 6. LIVE SEARCH FILTERING ---
             const searchInput = document.getElementById('liveSearchInput');
             const productItems = document.querySelectorAll('.produce-item');
             const noResultsMsg = document.getElementById('noResults');
@@ -432,95 +371,29 @@
                     let hasVisibleItems = false;
 
                     productItems.forEach(item => {
+                        // 1. Find the product name inside the card
                         const productName = item.querySelector('h5').textContent.toLowerCase();
+                        
+                        // 2. Check if the name contains the search term
                         if (productName.includes(term)) {
-                            item.classList.remove('d-none');
+                            item.classList.remove('d-none'); // Show it
                             hasVisibleItems = true;
                         } else {
-                            item.classList.add('d-none');
+                            item.classList.add('d-none'); // Hide it
                         }
                     });
 
-                    if (noResultsMsg) {
-                        if (hasVisibleItems) {
-                            noResultsMsg.classList.add('d-none');
-                            noResultsMsg.classList.remove('d-block');
-                        } else {
-                            noResultsMsg.classList.remove('d-none');
-                            noResultsMsg.classList.add('d-block');
-                        }
+                    // 3. Show/Hide "No Results" message
+                    if (hasVisibleItems) {
+                        noResultsMsg.classList.add('d-none');
+                        noResultsMsg.classList.remove('d-block');
+                    } else {
+                        noResultsMsg.classList.remove('d-none');
+                        noResultsMsg.classList.add('d-block');
                     }
                 });
             }
-
-            // --- 9. INITIALIZE RECOMMENDATIONS ---
-            {% if session.get('user_id') %}
-                loadRecommendations();
-            {% endif %}
-
-            // Scroll Behavior
-            const scrollTopBtn = document.getElementById("scrollTopBtn");
-            window.onscroll = () => { if(scrollTopBtn) scrollTopBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
-            if(scrollTopBtn) scrollTopBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
         });
-
-        // --- 10. UPDATED RECOMMENDATION LOADER (SLIDER COMPATIBLE) ---
-        function loadRecommendations() {
-            const loadingEl = document.getElementById('recommendations-loading');
-            const gridEl = document.getElementById('recommendations-grid');
-            const sliderContainer = document.getElementById('slider-container');
-            const emptyEl = document.getElementById('recommendations-empty');
-            const errorEl = document.getElementById('recommendations-error');
-
-            if (!loadingEl) return;
-
-            fetch('/api/recommendations')
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to fetch recommendations');
-                    return response.json();
-                })
-                .then(data => {
-                    loadingEl.style.display = 'none';
-                    
-                    if (data.recommendations && data.recommendations.length > 0) {
-                        // Show slider container and set grid to flex
-                        if (sliderContainer) sliderContainer.style.display = 'block';
-                        gridEl.style.display = 'flex'; 
-                        
-                        if (emptyEl) emptyEl.style.display = 'none';
-                        if (errorEl) errorEl.style.display = 'none';
-                        
-                        gridEl.innerHTML = data.recommendations.map(rec => `
-                            <div class="recommendation-card">
-                                <div class="recommendation-image-container">
-                                    <img src="${rec.image_file && rec.image_file.startsWith('http') ? rec.image_file : '/static/image/' + (rec.image_file || 'default_product.jpg')}" 
-                                        alt="${rec.product_name}"
-                                        onerror="this.src='/static/image/default_product.jpg'">
-                                </div>
-                                <div class="recommendation-card-body">
-                                    <h5 class="recommendation-card-title">${rec.product_name}</h5>
-                                    <div class="recommendation-price">$${rec.price.toFixed(2)}</div>
-                                    <span class="recommendation-confidence ${rec.confidence}">${rec.confidence}</span>
-                                    <p class="recommendation-reason">${rec.reason}</p>
-                                    <a href="/product" class="recommendation-btn">
-                                        View Product
-                                    </a>
-                                </div>
-                            </div>
-                        `).join('');
-                    } else {
-                        if (emptyEl) emptyEl.style.display = 'block';
-                        gridEl.style.display = 'none';
-                        if (sliderContainer) sliderContainer.style.display = 'none';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading recommendations:', error);
-                    loadingEl.style.display = 'none';
-                    if (errorEl) errorEl.style.display = 'block';
-                    gridEl.style.display = 'none';
-                });
-        }
     </script>
     <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="stockToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
