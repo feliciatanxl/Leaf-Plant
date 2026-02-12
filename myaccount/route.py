@@ -299,7 +299,7 @@ def delete_account():
         # 4. Success!
         session.clear()
         flash("Your account has been deleted.", "info")
-        return redirect(url_for('index')) 
+        return redirect(url_for('account')) 
         
     except Exception as e:
         db.session.rollback()
