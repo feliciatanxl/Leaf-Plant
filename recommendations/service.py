@@ -164,7 +164,7 @@ Return your response as a valid JSON object with this exact structure:
   "purchase_history_summary": "<brief summary of customer's purchase patterns>"
 }
 
-Provide 3-5 recommendations. Focus on products that make sense based on their history."""
+Provide 5 recommendations. Focus on products that make sense based on their history."""
     
     user_prompt = f"""Customer: {customer_name} (ID: {customer_id})
 
