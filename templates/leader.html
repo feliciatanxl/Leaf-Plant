@@ -172,6 +172,47 @@
                     </div>
 
                     <div id="customers" class="user-section">
+                         {% if pending_leads %}
+                            <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-white p-2 rounded-circle text-success me-3 shadow-sm">
+                                            <i class="bi bi-person-plus-fill fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold text-success mb-0">New Neighbor Requests</h5>
+                                            <small class="text-success-emphasis">AI found these potential neighbors in your chat.</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-group shadow-sm rounded-3">
+                                        {% for lead in pending_leads %}
+                                        <div class="list-group-item border-0 d-flex justify-content-between align-items-center p-3" id="lead-row-{{ lead.id }}">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <h6 class="fw-bold mb-0">{{ lead.extracted_name }}</h6>
+                                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ lead.neighborhood }}</small>
+                                            </div>
+                                            <span class="badge bg-light text-dark border">{{ lead.phone }}</span>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-danger btn-sm rounded-circle p-2" 
+                                                    onclick="rejectLead('{{ lead.id }}', this)" 
+                                                    title="Reject Spam/Scam">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+
+                                            <button class="btn btn-success fw-bold rounded-pill px-4" onclick="claimLead('{{ lead.id }}', this)">
+                                                <i class="bi bi-check-lg me-1"></i> Claim
+                                            </button>
+                                        </div>
+                                    </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="fw-bold mb-0">Community Members</h4>
                             <div class="input-group input-group-sm w-auto">
@@ -500,6 +541,102 @@
         });
     }
 
+    window.rejectLead = function(leadId, btnElement) {
+    if(!confirm("Are you sure you want to remove this lead? This cannot be undone.")) return;
+
+    // Visual feedback
+    const row = document.getElementById(`lead-row-${leadId}`);
+    btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    btnElement.disabled = true;
+
+    fetch(`/leader/reject-lead/${leadId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fade out and remove
+            row.style.transition = "all 0.5s";
+            row.style.opacity = "0";
+            setTimeout(() => {
+                row.remove();
+                // Optional: Check if list is empty and reload to remove the green box
+                if(document.querySelectorAll('#neighborsGrid .list-group-item').length === 0) location.reload();
+            }, 500);
+        } else {
+            alert("Error: " + data.message);
+            btnElement.innerHTML = '<i class="bi bi-trash"></i>';
+            btnElement.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Network error.");
+    });
+}
+
+    window.claimLead = function(leadId, btnElement) {
+    // 1. Try to find the row by ID first
+    let row = document.getElementById('lead-row-' + leadId);
+    
+    // 2. FALLBACK: If ID lookup fails, find the closest list item parent
+    // This effectively ignores any ID mismatch issues
+    if (!row) {
+        console.warn("ID lookup failed, using closest parent row.");
+        row = btnElement.closest('.list-group-item');
+    }
+
+    // Visual feedback immediately
+    const originalContent = btnElement.innerHTML;
+    btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
+    btnElement.disabled = true;
+
+    // 3. Call Backend
+    fetch('/leader/claim-lead/' + leadId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success State
+            btnElement.innerHTML = '<i class="bi bi-check-circle"></i> Done';
+            btnElement.classList.remove('btn-success');
+            btnElement.classList.add('btn-secondary');
+            
+            if (row) {
+                // Fade out animation
+                row.style.transition = "all 0.5s ease";
+                row.style.opacity = "0";
+                row.style.transform = "translateX(20px)";
+                
+                setTimeout(() => {
+                    row.remove(); // Remove element from DOM
+                    
+                    // Reload if list is empty to clear the green container
+                    if (document.querySelectorAll('#neighborsGrid .list-group-item').length === 0) {
+                        location.reload(); 
+                    }
+                }, 600);
+            } else {
+                // If row still somehow not found, force reload to update UI
+                location.reload();
+            }
+        } else {
+            // Error Handling
+            alert("Error: " + data.message);
+            btnElement.innerHTML = originalContent;
+            btnElement.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Network error.");
+        btnElement.innerHTML = originalContent;
+        btnElement.disabled = false;
+    });
+}
     // --- 6. Initialize Tabs on Load ---
     window.addEventListener('DOMContentLoaded', () => {
         let activeId = window.location.hash.substring(1) || 'dashboard';

@@ -137,35 +137,81 @@ def send_whatsapp_message(to_phone, message_text):
 # ==============================================================================
 def handle_new_prospect(customer_number, customer_message, history):
     sg_now = datetime.now(pytz.timezone('Asia/Singapore')).strftime("%Y-%m-%d %H:%M:%S")
-    leader = GroupLeader.query.first()
-    leader_info = f"{leader.name} (+{str(leader.phone).split('.')[0]})" if leader else "a local delivery representative"
-
+    
+    # 1. AI Extraction Prompt
+    # We explicitly tell the AI to extract details if found in the conversation
     system_prompt = f"""
     You are 'Leaf Plant Onboarding AI'. Time: {sg_now}. 
-    GOAL: Collect NAME and NEIGHBORHOOD. 
+    GOAL: Collect NAME and NEIGHBORHOOD from the user. 
+    
     INSTRUCTIONS:
-    1. Ask for name and neighborhood.
-    2. Inform them their Leader ({leader_info}) will verify them.
-    3. State: "Orders can only be placed after registration."
+    - Inform them a local Group Leader will verify their registration.
+    - State: "Orders can only be placed after registration."
+    - Be neighborly and helpful.
+    
+    IMPORTANT: If the user provides their details, output them in this format at the end:
     [[NAME: user_name]] [[ADDRESS: neighborhood]]
     """
+    
     messages = [{"role": "system", "content": system_prompt}, *history, {"role": "user", "content": customer_message}]
+    
     try:
         completion = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
         ai_reply = completion.choices[0].message.content
+        
+        # 2. Extract Data using Regex
         name_match = re.search(r"\[\[NAME:\s*(.*?)\]\]", ai_reply)
         addr_match = re.search(r"\[\[ADDRESS:\s*(.*?)\]\]", ai_reply)
+        
+        extracted_name = name_match.group(1).strip() if name_match else "New Prospect"
+        extracted_area = addr_match.group(1).strip() if addr_match else "Pending"
+
+        # ---------------------------------------------------------
+        # 👇 NEW: SMART LEADER ASSIGNMENT LOGIC
+        # ---------------------------------------------------------
+        assigned_leader_id = None
+        if extracted_area != "Pending":
+            # Search for a leader whose area matches the extracted text
+            # e.g., if AI extracts "Seletar", we find the leader for "Seletar"
+            leader = GroupLeader.query.filter(GroupLeader.area.ilike(f"%{extracted_area}%")).first()
+            if leader:
+                assigned_leader_id = leader.id
+                print(f"✅ Lead assigned to Leader: {leader.name} ({leader.area})")
+
+        # 3. Save or Update Lead in DB
         lead = WhatsAppLead.query.filter_by(phone=customer_number).first()
+        
         if not lead:
-            lead = WhatsAppLead(phone=customer_number, extracted_name="New Prospect", neighborhood="Pending")
+            lead = WhatsAppLead(
+                phone=customer_number, 
+                extracted_name=extracted_name, 
+                neighborhood=extracted_area,
+                leader_id=assigned_leader_id, # <--- Links to Leader Dashboard
+                status="Pending Review" if assigned_leader_id else "Awaiting Assignment"
+            )
             db.session.add(lead)
-        if name_match: lead.extracted_name = name_match.group(1).strip()
-        if addr_match: lead.neighborhood = addr_match.group(1).strip()
+        else:
+            # Update existing lead record if new info is provided
+            if name_match: lead.extracted_name = extracted_name
+            if addr_match: 
+                lead.neighborhood = extracted_area
+                
+                # Only change leader or status if NOT converted yet
+                if lead.status != "Converted":
+                    lead.leader_id = assigned_leader_id 
+                    if assigned_leader_id:
+                        lead.status = "Pending Review"
+            
         db.session.commit()
-        return ai_reply.split('[[')[0].strip()
-    except Exception:
+        
+        # 4. Return Clean Message (Remove the [[TAGS]])
+        clean_reply = re.sub(r"\[\[.*?\]\]", "", ai_reply).strip()
+        return clean_reply
+
+    except Exception as e:
+        print(f"❌ Lead Parsing Error: {e}")
         db.session.rollback()
-        return "Welcome! May I have your name and neighborhood to register you?"
+        return "Welcome to Leaf Plant! 🌿 May I have your name and neighborhood (e.g. Seletar) to get you started?"
 
 # ==============================================================================
 # 6. AI Sales Engine 

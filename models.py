@@ -57,6 +57,7 @@ class WhatsAppLead(db.Model):
     phone = db.Column(db.String(20), unique=True, nullable=False)
     extracted_name = db.Column(db.String(100)) 
     neighborhood = db.Column(db.String(100))     
+    leader_id = db.Column(db.Integer, db.ForeignKey('group_leader.id'), nullable=True)
     status = db.Column(db.String(50), default='Awaiting Assignment')
     created_at = db.Column(db.DateTime, default=get_sg_time)
 

@@ -157,9 +157,10 @@
                                 <p class="small-text subtitle">Log in to view your orders and personalized settings.</p>
                                 <form action="{{ url_for('auth.login') }}" method="POST">
                                     <div class="mb-3">
-                                        <label for="loginEmail" class="form-label">Email address</label>
-                                        <input type="email" class="form-control" id="loginEmail" name="email" placeholder="Enter your email" required>
-                                    </div>
+                                    <label for="loginInput" class="form-label">Email or Phone Number</label>
+                                    <input type="text" class="form-control" id="loginInput" name="email" 
+                                        placeholder="e.g. 6591234567 or user@example.com" required>
+                                </div>
                                     <div class="mb-3">
                                         <label for="loginPassword" class="form-label">Password</label>
                                         <div class="input-group-password">

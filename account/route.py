@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message 
 from models import db, Customer, mail, find_leader_by_address
 import os
+from sqlalchemy import or_
 
 # 1. Define the Blueprint
 auth = Blueprint('auth', __name__)
@@ -13,11 +14,19 @@ auth = Blueprint('auth', __name__)
 # 2. LOGIN ROUTE
 @auth.route('/login', methods=['POST'])
 def login():
-    email = request.form.get('email')
+    # Get the input (This field now accepts Email OR Phone)
+    login_input = request.form.get('email') 
     password = request.form.get('password')
     remember = request.form.get('remember')
 
-    user = Customer.query.filter_by(email=email).first()
+    # 🔍 UPDATED SEARCH LOGIC: Check both columns
+    # This allows Felicia to login using "6591234567"
+    user = Customer.query.filter(
+        or_(
+            Customer.email == login_input, 
+            Customer.phone == login_input
+        )
+    ).first()
 
     if user and check_password_hash(user.password_hash, password):
         session['user_id'] = user.id
@@ -39,7 +48,7 @@ def login():
         else:
             return redirect(url_for('myaccount.myaccount')) 
     
-    flash("Invalid email or password.", "danger")
+    flash("Invalid email/phone or password.", "danger")
     return redirect(url_for('account', tab='login'))
 
 @auth.route('/signup', methods=['POST'])
