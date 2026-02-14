@@ -74,7 +74,7 @@ def dashboard():
     group_leaders = GroupLeader.query.all()
     customers = Customer.query.order_by(Customer.id.desc()).all()
     
-    # Fetch Promo Codes for the Dashboard Table
+    # Fetch Promo Codes
     promos = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
     
     # Counts
@@ -85,6 +85,9 @@ def dashboard():
     total_profit_value = total_sales_value * 0.30
     sgt = pytz.timezone('Asia/Singapore')
     sync_time = datetime.now(sgt).strftime("%d %b, %H:%M:%S")
+
+    # 👇 1. GET CURRENT LOGGED-IN ADMIN USER
+    current_admin = Customer.query.get(session.get('user_id'))
 
     return render_template('admin.html', 
                            inquiries=inquiries, 
@@ -102,7 +105,9 @@ def dashboard():
                            admin_count=admin_count,
                            user_count=user_count,
                            leader_count=leader_count,
-                           sync_time=sync_time)
+                           sync_time=sync_time,
+                           # 👇 2. PASS IT TO THE TEMPLATE
+                           admin=current_admin)
 
 # --- LIVE SYNC API ---
 @admin_bp.route('/api/products')
@@ -674,6 +679,25 @@ def demote_user(user_id):
         user.role = 'user'
         db.session.commit()
     return redirect(url_for('admin.dashboard', tab='manage-users'))
+
+@admin_bp.route('/api/toggle-stock-alerts', methods=['POST'])
+def toggle_stock_alerts():
+    if session.get('user_role') != 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    try:
+        user = Customer.query.get(session['user_id'])
+        data = request.get_json()
+        
+        # Update the setting
+        user.receive_stock_alerts = data.get('enabled', True)
+        db.session.commit()
+        
+        status = "ON" if user.receive_stock_alerts else "OFF"
+        return jsonify({'success': True, 'message': f'Alerts turned {status}'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):

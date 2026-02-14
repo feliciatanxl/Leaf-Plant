@@ -6,6 +6,7 @@ import pytz
 from flask import Blueprint, request, jsonify, render_template, session, flash, redirect, url_for, abort
 from dotenv import load_dotenv
 from models import db, Product, PromoCode, WhatsAppOrder, Customer, GroupLeader, LoyaltyPoints, LoyaltyTransaction, Voucher
+from whatsapp.app import send_whatsapp_message
 
 load_dotenv()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -295,9 +296,40 @@ def handle_successful_order(session_data):
                 if db_product_id:
                     product = Product.query.get(int(db_product_id))
                     if product:
+                        # Deduct Stock
                         product.available_qty = max(0, product.available_qty - item.quantity)
                         if product.available_qty == 0:
                             product.status = "Out of Stock"
+
+                        # 👇 NEW: STOCK ALERT LOGIC STARTS HERE 👇
+                        # -------------------------------------------------
+                        LOW_STOCK_THRESHOLD = 5
+                        
+                        if product.available_qty <= LOW_STOCK_THRESHOLD:
+                            print(f"⚠️ Low Stock Detected: {product.name} ({product.available_qty} left)")
+                            
+                            # 1. Find all Admins
+                            admins = Customer.query.filter_by(role='admin').all()
+                            
+                            # 2. Send WhatsApp to EACH Admin
+                            for admin in admins:
+                                if admin.phone:
+                                    try:
+                                        msg = (
+                                            f"🚨 *LOW STOCK ALERT* 🚨\n\n"
+                                            f"📦 Product: *{product.name}*\n"
+                                            f"📉 Remaining: *{product.available_qty}*\n"
+                                            f"⚠️ Status: *LOW STOCK*\n\n"
+                                            f"Please restock immediately!"
+                                        )
+                                        # Use the imported helper function
+                                        send_whatsapp_message(admin.phone, msg)
+                                        print(f"   ✅ Alert sent to admin {admin.name}")
+                                    except Exception as e:
+                                        print(f"   ❌ Failed to notify admin {admin.name}: {e}")
+                        # -------------------------------------------------
+                        # 👆 NEW LOGIC ENDS HERE 👆
+
             except Exception as stock_err:
                 print(f"⚠️ Stock deduction failed: {stock_err}")
 

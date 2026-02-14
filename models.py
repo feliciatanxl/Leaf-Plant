@@ -129,7 +129,7 @@ class StockAlert(db.Model):
 
 class LoyaltyPoints(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), unique=True, nullable=False)
     current_points = db.Column(db.Integer, default=0)
     lifetime_points = db.Column(db.Integer, default=0)
     tier = db.Column(db.String(20), default='Seedling') # Seedling, Sprout, Harvest

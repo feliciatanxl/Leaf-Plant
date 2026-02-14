@@ -353,7 +353,33 @@ def get_openai_response(customer_message, customer_number, customer_obj):
         import traceback
         traceback.print_exc()
         return "I'm just refreshing my notes, one moment! 😊"
+    
+# ==============================================================================
+# Admin Stock Alert Handling
+# ==============================================================================
+def notify_all_admins(message):
+    # 1. Get all users with role='admin'
+    admins = Customer.query.filter_by(role='admin').all()
+    
+    if not admins:
+        print("⚠️ No admins found to notify.")
+        return
 
+    print(f"📢 Sending alert to {len(admins)} admins...")
+
+    # 2. Loop through and send
+    for admin in admins:
+        if admin.phone: # Ensure they have a phone number
+            try:
+                # Remove '+' or spaces if your send_whatsapp_message needs clean numbers
+                clean_phone = admin.phone.replace(" ", "").replace("+", "")
+                
+                # Call your existing send function
+                send_whatsapp_message(clean_phone, message)
+                print(f"   ✅ Sent to {admin.name} ({clean_phone})")
+            except Exception as e:
+                print(f"   ❌ Failed to send to {admin.name}: {e}")
+                
 # ==============================================================================
 # 7. Webhook Handling
 # ==============================================================================
