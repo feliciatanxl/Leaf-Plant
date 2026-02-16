@@ -5,6 +5,8 @@ import pytz
 import secrets
 from werkzeug.security import generate_password_hash
 from whatsapp.app import send_whatsapp_message
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 
 leader_bp = Blueprint('leader', __name__)
 
@@ -48,8 +50,9 @@ def dashboard():
                            leader=leader, 
                            orders=orders, 
                            neighbors=neighbors, 
-                           leads=leads, # Now passes the correct leads
-                           new_leads_count=len(leads), # Updates the badge count
+                           # 👇 THIS LINE IS THE CRITICAL FIX 👇
+                           pending_leads=leads,  # <--- MUST match {% if pending_leads %} in HTML
+                           new_leads_count=len(leads), 
                            total_sales=my_earnings, 
                            pending_commission=my_earnings, 
                            today_orders_count=today_count, 
@@ -92,20 +95,45 @@ def update_order_status():
     
 @leader_bp.route('/leader/claim-lead/<int:lead_id>', methods=['POST'])
 def claim_lead(lead_id):
+    print(f"\n🚀 --- START CLAIM: Lead ID {lead_id} ---")
+    
+    # 1. Get the lead
     lead = WhatsAppLead.query.get_or_404(lead_id)
-    
-    # 1. CHECK IF USER ALREADY EXISTS
-    existing_user = Customer.query.filter_by(phone=lead.phone).first()
-    
-    if existing_user:
-        # ✅ FIX: Mark as 'Duplicate' and return SUCCESS so the row disappears
-        lead.status = "Duplicate"
-        db.session.add(lead)
-        db.session.commit()
-        return jsonify({"success": True, "message": "User already linked! Request cleared."})
+    print(f"📋 Processing Lead: {lead.extracted_name} | Phone: {lead.phone}")
 
+    # 2. Smart Check for Existing User
+    clean_lead_phone = ''.join(filter(str.isdigit, str(lead.phone)))
+    existing_user = None
+    
+    for c in Customer.query.all():
+        c_clean = ''.join(filter(str.isdigit, str(c.phone)))
+        if c_clean == clean_lead_phone or c_clean.endswith(clean_lead_phone[-8:]):
+            existing_user = c
+            break
+
+    # ======================================================
+    # PATH A: USER ALREADY EXISTS
+    # ======================================================
+    if existing_user:
+        print(f"✅ Found Existing User: {existing_user.name}")
+        try:
+            # FORCE SQL UPDATE
+            db.session.execute(
+                text("UPDATE whats_app_lead SET status='Converted' WHERE id = :lid"),
+                {'lid': lead_id}
+            )
+            db.session.commit()
+            print("✅ SQL Success! Lead status forced to 'Converted'.")
+            return jsonify({"success": True, "message": "User linked! Lead cleared."})
+        except Exception as e:
+            print(f"❌ SQL Failed: {e}")
+            return jsonify({"success": False, "message": "Database Lock Error"})
+
+    # ======================================================
+    # PATH B: CREATE NEW USER (This is where the fix was needed)
+    # ======================================================
+    print("👤 User not found. Creating new account...")
     try:
-        # 2. CREATE NEW ACCOUNT (Normal Flow)
         temp_password = "Leaf" + secrets.token_hex(3).upper()
         
         new_customer = Customer(
@@ -120,15 +148,19 @@ def claim_lead(lead_id):
         db.session.add(new_customer)
         db.session.flush()
         
-        # Initialize Points
         new_loyalty = LoyaltyPoints(customer_id=new_customer.id, current_points=0)
         db.session.add(new_loyalty)
         
-        # 3. MARK LEAD AS CONVERTED
-        lead.status = "Converted"
-        db.session.add(lead) # Force update tracking
+        # ---------------------------------------------------------
+        # 👇 NUCLEAR FIX APPLIED HERE TOO
+        # We force the status update via SQL immediately
+        # ---------------------------------------------------------
+        db.session.execute(
+            text("UPDATE whats_app_lead SET status='Converted' WHERE id = :lid"),
+            {'lid': lead_id}
+        )
         
-        # 4. SEND WHATSAPP
+        # Notify via WhatsApp
         try:
             login_link = url_for('auth.login', _external=True)
             msg = (
@@ -140,15 +172,33 @@ def claim_lead(lead_id):
                 f"Login here: {login_link}"
             )
             send_whatsapp_message(lead.phone, msg)
-        except Exception as wa_error:
-            print(f"⚠️ WhatsApp failed (ignored): {wa_error}")
+        except:
+            pass
 
         db.session.commit()
+        print("✅ New Account + Status Update Saved via SQL.")
         return jsonify({"success": True, "message": "Account created!"})
+
+    except IntegrityError:
+        # ==================================================
+        # PATH C: DUPLICATE ERROR (Safety Net)
+        # ==================================================
+        db.session.rollback()
+        print("⚠️ Database Integrity Error (Duplicate). Force cleaning...")
+        
+        try:
+            db.session.execute(
+                text("UPDATE whats_app_lead SET status='Converted' WHERE id = :lid"),
+                {'lid': lead_id}
+            )
+            db.session.commit()
+            return jsonify({"success": True, "message": "User existed. List cleared."})
+        except Exception as sql_e:
+            return jsonify({"success": False, "message": str(sql_e)})
 
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Claim Error: {e}")
+        print(f"❌ General Error: {e}")
         return jsonify({"success": False, "message": str(e)})
     
 @leader_bp.route('/leader/reject-lead/<int:lead_id>', methods=['POST'])

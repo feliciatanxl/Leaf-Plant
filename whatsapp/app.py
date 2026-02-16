@@ -145,11 +145,13 @@ def handle_new_prospect(customer_number, customer_message, history):
     GOAL: Collect NAME and NEIGHBORHOOD from the user. 
     
     INSTRUCTIONS:
-    - Inform them a local Group Leader will verify their registration.
+    - Once you have their details, explicitly repeat them back to the user to confirm (e.g., "Confirming your details: Name: Felicia, Neighborhood: Ang Mo Kio").
+    - Inform them that their local Group Leader will be in touch shortly to verify their registration.
     - State: "Orders can only be placed after registration."
-    - Be neighborly and helpful.
+    - Invite them to browse our produce while they wait at: https://leafplant.com.sg (or your specific URL).
+    - Be neighborly, warm, and helpful.
     
-    IMPORTANT: If the user provides their details, output them in this format at the end:
+    IMPORTANT: Once details are collected, you MUST output them in this hidden format at the very end of your message:
     [[NAME: user_name]] [[ADDRESS: neighborhood]]
     """
     
@@ -359,7 +361,7 @@ def get_openai_response(customer_message, customer_number, customer_obj):
 # ==============================================================================
 def notify_all_admins(message):
     # 1. Get all users with role='admin'
-    admins = Customer.query.filter_by(role='admin').all()
+    admins = Customer.query.filter_by(role='admin', receive_stock_alerts=True).all()
     
     if not admins:
         print("⚠️ No admins found to notify.")

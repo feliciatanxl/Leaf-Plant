@@ -106,7 +106,6 @@ def dashboard():
                            user_count=user_count,
                            leader_count=leader_count,
                            sync_time=sync_time,
-                           # 👇 2. PASS IT TO THE TEMPLATE
                            admin=current_admin)
 
 # --- LIVE SYNC API ---
@@ -915,3 +914,23 @@ def analytics_api():
         "top_products": {"labels": top_labels, "data": top_data},
         "demand": demand_data
     })
+    
+@admin_bp.route('/api/get-stock-demand')
+def get_stock_demand():
+    # 1. Query DB: Count alerts grouped by Product Name
+    # Filter: is_notified=False (Active waiters only)
+    results = db.session.query(
+        StockAlert.product_name,
+        func.count(StockAlert.id)
+    ).filter(StockAlert.is_notified == False)\
+     .group_by(StockAlert.product_name).all()
+
+    # 2. Format as JSON
+    data = []
+    for product_name, count in results:
+        data.append({
+            'name': product_name,
+            'count': count
+        })
+    
+    return jsonify(data)

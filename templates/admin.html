@@ -1365,9 +1365,12 @@
                                             </td>
                                             <td>
                                                 <div class="small text-muted">
-                                                    {{ user.email[:1] }}*******@{{ user.email.split('@')[-1] if '@' in
-                                                    user.email else 'mail.com' }}
-                                                </div>
+                                                {% if user.email %}
+                                                    {{ user.email[:1] }}*******@{{ user.email.split('@')[-1] }}
+                                                {% else %}
+                                                    <span class="fst-italic">No Email Linked</span>
+                                                {% endif %}
+                                            </div>
                                                 <div class="small">
                                                     **** **** {{ user.phone[-4:] if user.phone else '0000' }}
                                                 </div>
@@ -2173,6 +2176,48 @@
         alert("Network error. Check console.");
     });
 }
+
+// --- LIVE STOCK DEMAND UPDATER ---
+    function updateStockDemandTable() {
+        fetch('/admin/api/get-stock-demand')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('analyticsDemandTable');
+                if (!tableBody) return; // Safety check
+
+                tableBody.innerHTML = ''; // Clear current rows
+
+                if (data.length === 0) {
+                    // Show "No active alerts" state
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted">
+                                <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                                No active stock alerts.
+                            </td>
+                        </tr>`;
+                } else {
+                    // Loop through data and create rows
+                    data.forEach(item => {
+                        const row = `
+                            <tr>
+                                <td class="ps-3 fw-bold text-dark">${item.name}</td>
+                                <td class="text-end pe-3">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger px-3 rounded-pill">
+                                        <i class="bi bi-person-fill me-1"></i> ${item.count} waiting
+                                    </span>
+                                </td>
+                            </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching demand:', error));
+    }
+
+    // Run immediately, then every 3 seconds
+    updateStockDemandTable();
+    setInterval(updateStockDemandTable, 3000);
 
     </script>
 </body>
