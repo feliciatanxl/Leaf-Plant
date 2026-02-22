@@ -102,6 +102,9 @@ class Customer(db.Model):
     street_address = db.Column(db.String(255), nullable=True) 
     unit_number = db.Column(db.String(10), nullable=True) 
     loyalty = db.relationship('LoyaltyPoints', backref='customer', uselist=False, lazy=True, cascade="all, delete-orphan")
+    orders = db.relationship('WhatsAppOrder', backref='buyer', lazy=True, cascade="all, delete-orphan")
+    vouchers = db.relationship('Voucher', backref='customer', lazy=True, cascade="all, delete-orphan")
+    reviews = db.relationship('Review', backref='customer', lazy=True, cascade="all, delete-orphan")
 
     @property
     def points(self):
@@ -215,7 +218,6 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=get_sg_time)
-    customer = db.relationship('Customer', backref='reviews')
     
     @property
     def stars(self):
