@@ -11,13 +11,12 @@ from firebase_admin import credentials, storage, initialize_app
 
 # This gets the folder that main.py is actually sitting in
 basedir = os.path.abspath(os.path.dirname(__file__))
-# This creates the full path: C:\Users\charb\...\serviceAccountKey.json
 cert_path = os.path.join(basedir, 'serviceAccountKey.json')
 
 # Now use that path to initialize
 cred = credentials.Certificate(cert_path)
 initialize_app(cred, {
-    'storageBucket': 'wdp-ws-ai-2025.firebasestorage.app'
+    'storageBucket': 'leaf-plant-wdp-ai.firebasestorage.app'
 })
 
 # Database and Model Imports

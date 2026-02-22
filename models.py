@@ -132,8 +132,8 @@ class LoyaltyPoints(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), unique=True, nullable=False)
     current_points = db.Column(db.Integer, default=0)
     lifetime_points = db.Column(db.Integer, default=0)
-    tier = db.Column(db.String(20), default='Seedling') # Seedling, Sprout, Harvest
-    transactions = db.relationship('LoyaltyTransaction', backref='account', lazy=True)
+    tier = db.Column(db.String(20), default='Seedling') 
+    transactions = db.relationship('LoyaltyTransaction', backref='account', lazy=True, cascade="all, delete-orphan")
 
     def add_points(self, amount, description, ref_id=None):
         if self.current_points is None: self.current_points = 0

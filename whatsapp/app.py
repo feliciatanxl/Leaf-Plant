@@ -72,7 +72,6 @@ def create_payment_link(items, customer_id, customer_email=None):
     try:
         line_items = []
         for item in items:
-            # Get Product ID for Metadata
             product_obj = Product.query.filter(Product.name.ilike(f"%{item['name']}%")).first()
             prod_id = product_obj.id if product_obj else None
 
@@ -92,20 +91,17 @@ def create_payment_link(items, customer_id, customer_email=None):
             payment_method_types=['card', 'paynow'],
             line_items=line_items,
             mode='payment',
-            client_reference_id=str(customer_id),
             
-            # 👇 CHANGE 1: ADD THE 'source': 'whatsapp' TAG
+            invoice_creation={"enabled": True}, 
+            
+            client_reference_id=str(customer_id),
             metadata={
                 'user_id': str(customer_id),
                 'source': 'whatsapp' 
             },
-            
             allow_promotion_codes=True, 
-
-            # 👇 CHANGE 2: UPDATE PORT TO 5001 (To match your main.py)
-            success_url='http://127.0.0.1:5001/orders/success',
+            success_url='http://127.0.0.1:5001/orders/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url='http://127.0.0.1:5001/orders',
-            
             customer_email=customer_email
         )
         return checkout_session.url

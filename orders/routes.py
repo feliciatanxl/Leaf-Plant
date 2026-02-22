@@ -353,8 +353,6 @@ def send_payment_confirmation(phone, amount, items, points_earned, invoice_pdf=N
         f"🌱 *Harvest Rewards:*\nYou earned *{points_earned} Leaf Points*!\n\n"
         f"Track your order in your account! 🚚"
     )
-
-    # ✅ Now this check works because invoice_pdf is a valid variable
     if invoice_pdf:
         message_text += f"\n\n📄 *Download Invoice:*\n{invoice_pdf}"
 
