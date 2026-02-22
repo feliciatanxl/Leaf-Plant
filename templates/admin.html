@@ -371,12 +371,38 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{{ url_for('admin.delete_promo', id=promo.id) }}"
-                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                    onclick="return confirm('Delete this code? It will be removed from Stripe immediately.')">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </a>
-                                            </td>
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                                data-bs-toggle="modal" data-bs-target="#deletePromoModal{{ promo.id }}">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+
+                                            <div class="modal fade" id="deletePromoModal{{ promo.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content border-0 shadow-lg rounded-4">
+                                                        <div class="modal-header bg-white border-0 pt-4 px-4">
+                                                            <h5 class="modal-title text-danger fw-bold">
+                                                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4 text-start text-wrap">
+                                                            Are you sure you want to permanently delete the promo code <strong class="text-primary fs-5">{{ promo.code }}</strong>?
+                                                            <br><br>
+                                                            <div class="p-3 bg-light rounded-3 border-start border-danger border-4">
+                                                                <small class="text-muted d-block fw-bold mb-1">Stripe Impact:</small>
+                                                                This code will be immediately deactivated and removed from your linked Stripe account. Customers will no longer be able to use it at checkout.
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-0 p-4 pt-0">
+                                                            <button type="button" class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">Cancel</button>
+                                                            <a href="{{ url_for('admin.delete_promo', id=promo.id) }}" class="btn btn-danger px-4 rounded-3 fw-bold">
+                                                                Delete Code
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
                                         </tr>
                                         {% else %}
                                         <tr>
